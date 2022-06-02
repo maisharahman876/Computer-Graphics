@@ -600,14 +600,15 @@ void specialKeyListener(int key, int x,int y)
 
 
     case GLUT_KEY_HOME:
-        if(box_a>1)
+        if(box_a>0)
         {
             cyl_r+=1;
             box_a-=1;
         }
+        //cout<<box_a<<" "<<cyl_r<<endl;
         break;
     case GLUT_KEY_END:
-        if(cyl_r>1)
+        if(cyl_r>0)
         {
             cyl_r-=1;
             box_a+=1;
