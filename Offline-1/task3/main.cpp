@@ -391,7 +391,7 @@ void display()
     //3. Which direction is the camera's UP direction?
 
     //gluLookAt(100,100,0,	0,0,0,	0,0,1);
-    gluLookAt(200*cos(cameraAngle), 200*sin(cameraAngle), cameraHeight,		0,0,0,		0,0,1);
+    gluLookAt(100*cos(cameraAngle), 100*sin(cameraAngle), cameraHeight,		0,0,0,		0,0,1);
     //gluLookAt(0,0,200,	0,0,0,	0,1,0);
 
 

@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1654180877 source:e:\4-1\cse 410\offline-1\task1\main.cpp
+1654680168 source:c:\users\maish\documents\github\computer-graphics\offline-1\online\main.cpp
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
@@ -20,20 +20,4 @@
 	<GL/gl.h>
 	<GL/glu.h>
 	<stdlib.h>
-
-1654182840 source:e:\4-1\cse 410\offline-1\task1-task2\main.cpp
-	<stdio.h>
-	<stdlib.h>
-	<math.h>
-	<bits/stdc++.h>
-	<windows.h>
-	<GL/glut.h>
-
-1654237105 source:c:\users\maish\documents\github\computer-graphics\offline-1\task1-task2\main.cpp
-	<stdio.h>
-	<stdlib.h>
-	<math.h>
-	<bits/stdc++.h>
-	<windows.h>
-	<GL/glut.h>
 
