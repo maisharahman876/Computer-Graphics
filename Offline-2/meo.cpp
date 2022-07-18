@@ -1,8 +1,33 @@
 #include<bits/stdc++.h>
 #include <fstream>
 #define pi 3.141592653
+#define X 0
+#define Y 1
+#define Z 2
+#include "bitmap_image.hpp"
 using namespace std;
-
+double maximum(double a, double b, double c)
+{
+    if(a>=b&&a>=c)
+    {
+        return a;
+    }
+    else if(b>=a&&b>=c)
+        return b;
+    else
+        return c;
+}
+double minimum(double a, double b, double c)
+{
+    if(a<=b&&a<=c)
+    {
+        return a;
+    }
+    else if(b<=a&&b<=c)
+        return b;
+    else
+        return c;
+}
 double** mulMat(double **mat1, double **mat2,int R1,int R2,int C1,int C2)
 {
     double **rslt= new double*[R1];
@@ -29,6 +54,14 @@ double** mulMat(double **mat1, double **mat2,int R1,int R2,int C1,int C2)
 
 
     }
+    /*for(int i=0;i<4;i++)
+    {
+        delete mat1[i];
+        delete mat2[i];
+
+    }
+    delete mat1;
+    delete mat2;*/
     return rslt;
 }
 class point
@@ -51,6 +84,21 @@ public:
     void printPoint()
     {
         cout<<x<<" "<<y<<" "<<z<<endl;
+    }
+
+};
+class Triangle
+{
+public :
+    point p1;
+    point p2;
+    point p3;
+    int r,g,b;
+    print()
+    {
+        p1.printPoint();
+        p2.printPoint();
+        p3.printPoint();
     }
 
 };
@@ -79,6 +127,23 @@ point Rodrigues(point xp, point a, double t)
     return xp;
 
 }
+double intersect(point p1,point p2,int axis1,double val,int axis2)
+{
+    double m;
+    if(axis1==Y&&axis2==X)
+    {
+        m=(val-p1.y)*(p2.x-p1.x)/(p2.y-p2.y)+p1.x;
+    }
+    else if (axis1==Y&&axis2==Z)
+    {
+        m=(val-p1.y)*(p2.z-p1.z)/(p2.y-p2.y)+p1.z;
+    }
+    else if (axis1==X&&axis2==Z)
+    {
+        m=(val-p1.x)*(p2.z-p1.z)/(p2.x-p2.x)+p1.z;
+    }
+    return m;
+}
 class space
 {
 public:
@@ -87,8 +152,9 @@ public:
     double** current;
     double** V;
     double** P;
-    ofstream st1,st2,st3;
-
+    ofstream st1,st2,st3,st4;
+    vector<Triangle> objects;
+    double** z_buffer;
     space()
     {
 
@@ -115,10 +181,11 @@ public:
         st1.open("stage1.txt",ios::out);
         st2.open("stage2.txt",ios::out);
         st3.open("stage3.txt",ios::out);
+        st4.open("stage4.txt",ios::out);
     }
     void print();
     void drawTriangle(point,point,point);
-    void draw(point);
+    double** draw(point);
     void push();
     void pop();
     void translate(double,double,double);
@@ -126,9 +193,27 @@ public:
     void rotation(double,double,double,double);
     void calculateView(point eye,point look,point up);
     void calculatePerspective(double,double,double,double);
+    void z_bufferAlgo(int,int,double,double,double,double);
+    ~space()
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            delete current[i];
+            delete V[i];
+            delete P[i];
+
+        }
+        delete current;
+        delete V;
+        delete P;
+        st1.close();
+        st2.close();
+        st3.close();
+    }
+
 };
 
-void space::draw(point p)
+double** space::draw(point p)
 {
 
 
@@ -180,13 +265,29 @@ void space::draw(point p)
     st2<<endl;
     st3<<endl;
     cout<<endl;
+    return p3;
+
 
 }
 void space::drawTriangle(point p1,point p2,point p3)
 {
-    draw(p1);
-    draw(p2);
-    draw(p3);
+    double** d1=draw(p1);
+    double** d2=draw(p2);
+    double** d3=draw(p3);
+
+    cout<<endl;
+    point n_p1(d1[0][0]/d1[3][0],d1[1][0]/d1[3][0],d1[2][0]/d1[3][0]),n_p2(d2[0][0]/d2[3][0],d2[1][0]/d2[3][0],d2[2][0]/d2[3][0]),n_p3(d3[0][0]/d3[3][0],d3[1][0]/d3[3][0],d3[2][0]/d3[3][0]);
+    Triangle t;
+    t.p1=n_p1;
+    t.p2=n_p2;
+    t.p3=n_p3;
+    srand(time(0));
+    t.r=rand()%255;
+    t.g=rand()%255;
+    t.b=rand()%255;
+    objects.push_back(t);
+    t.print();
+    cout<<endl;
     st1<<endl;
     st2<<endl;
     st3<<endl;
@@ -211,6 +312,11 @@ void space::push()
 }
 void space::pop()
 {
+    for(int i = 0; i < 4; i++)
+    {
+        delete current[i];
+    }
+    delete current;
     current=stack.top();
     stack.pop();
 }
@@ -315,20 +421,21 @@ void space::calculateView(point eye,point look,point up)
     T= new double*[4];
     for(int i = 0; i < 4; i++)
     {
-       R[i] = new double[4];
-       T[i] = new double[4];
-       for(int j=0;j<4;j++)
-       {
-           if(i==j)
-           {
-               R[i][j]=1;
-               T[i][j]=1;
-           }
-           else{
-            R[i][j]=0;
-            T[i][j]=0;
-           }
-       }
+        R[i] = new double[4];
+        T[i] = new double[4];
+        for(int j=0; j<4; j++)
+        {
+            if(i==j)
+            {
+                R[i][j]=1;
+                T[i][j]=1;
+            }
+            else
+            {
+                R[i][j]=0;
+                T[i][j]=0;
+            }
+        }
     }
     point l,r,u;
 
@@ -336,7 +443,7 @@ void space::calculateView(point eye,point look,point up)
     l.x=look.x-eye.x;
     l.y=look.y-eye.y;
     l.z=look.z-eye.z;
-   double m=sqrt(l.x*l.x+l.y*l.y+l.z*l.z);
+    double m=sqrt(l.x*l.x+l.y*l.y+l.z*l.z);
     l.x=l.x/m;
     l.y=l.y/m;
     l.z=l.z/m;
@@ -363,7 +470,7 @@ void space::calculateView(point eye,point look,point up)
     R[1][0]=u.x,R[1][1]=u.y,R[1][2]=u.z;
     R[2][0]=-l.x,R[2][1]=-l.y,R[2][2]=-l.z;
 
-     V= mulMat(R,T,4,4,4,4);
+    V= mulMat(R,T,4,4,4,4);
 }
 void space::print()
 {
@@ -397,23 +504,156 @@ void space::calculatePerspective(double fovY,double aspectRatio,double near,doub
 
 
 }
+void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double max_z)
+{
+    z_buffer= new double*[h];
+    double dx,dy,top_y,left_x;
+    bitmap_image image(w,h);
+    dx=-2*lx/w;
+    dy=-2*ly/h;
+    top_y=-ly-dy/2;
+    left_x=lx+dx/2;
+    for(int i=0; i<h; i++)
+    {
+        z_buffer[i]=new double[w];
+        for(int j=0; j<w; j++)
+        {
+            z_buffer[i][j]=max_z;
+        }
+    }
+    for(int i=0; i<objects.size(); i++)
+    {
+        Triangle t=objects[i];
+        double max_y=maximum(t.p1.y,t.p2.y,t.p3.y);
+        double min_y=minimum(t.p1.y,t.p2.y,t.p3.y);
+
+        max_y=max_y>top_y?top_y:max_y;
+        min_y=min_y<-top_y?-top_y:min_y;
+        int  top_scanline=int((top_y-max_y)/dy);
+        int bottom_scanline=int((top_y-min_y)/dy);
+
+        for (int r=top_scanline; r<bottom_scanline; r++)
+        {
+            double y=top_y-r*dy;
+            double m1,m2,m3;
+            m1= intersect(t.p1,t.p2,Y,y,X);
+            m2=intersect(t.p2,t.p3,Y,y,X);
+            m3=intersect(t.p3,t.p1,Y,y,X);
+            double max_x;
+            double min_x;
+            double zp,c,za,zb,xa,xb;
+            if(m1>=m2&&m1>=m3)
+            {
+                zb=intersect(t.p1,t.p2,Y,y,Z);
+                xb=max_x=m1;
+
+            }
+            else if(m2>=m1&&m2>=m3)
+            {
+                zb=intersect(t.p2,t.p3,Y,y,Z);
+                xb=max_x=m2;
+            }
+            else
+            {
+                zb=intersect(t.p3,t.p1,Y,y,Z);
+                xb=max_x=m3;
+            }
+            if(m1<=m2&&m1<=m3)
+            {
+                za=intersect(t.p1,t.p2,Y,y,Z);
+                xa=min_x=m1;
+                if(m1<left_x)
+                {
+                    zp=intersect(t.p1,t.p2,X,left_x,Z);
+                    min_x=left_x;
+                }
+                else
+                    zp=za;
+            }
+            else if(m2<=m1&&m2<=m3)
+            {
+                za=intersect(t.p2,t.p3,Y,y,Z);
+                xa=min_x=m2;
+                if(m2<left_x)
+                {
+                    zp=intersect(t.p2,t.p3,X,left_x,Z);
+                    min_x=left_x;
+                }
+                else
+                    zp=za;
+            }
+            else
+            {
+                za=intersect(t.p3,t.p1,Y,y,Z);
+                xa=min_x=m3;
+                if(m3<left_x)
+                {
+                    zp=intersect(t.p3,t.p1,X,left_x,Z);
+                    min_x=left_x;
+                }
+                else
+                    zp=za;
+            }
+            if(max_x>-left_x)
+                max_x=-left_x;
+
+            c=(zb-za)*dx/(xb-xa);
+            int left_scanline=int((min_x-left_x)/dx);
+            int right_scanline=int((max_x-left_x)/dx);
+            for(int col=left_scanline; col<right_scanline; col++)
+            {
+                if(zp<max_z&&zp>min_z)
+                {
+                    if(zp<z_buffer[r][col])
+                    {
+                        z_buffer[r][col]=zp;
+                        image.set_pixel(r,col,t.r,t.g,t.b);
+
+                    }
+                }
+                zp+=c;
+
+
+            }
+
+        }
+
+    }
+    for(int i=0;i<h;i++)
+        for(int j=0;j<w;j++)
+    {
+
+        if(z_buffer[i][j]<max_z)
+        {
+            st2 << std::setprecision(7) << std::fixed;
+            st4<<z_buffer[i][j]<<" ";
+        }
+        st4<<endl;
+    }
+image.save_image("out.bmp");
+
+}
 int main()
 {
     point eye,look,up;
-    double fovY,aspectRatio,near,far;
-
+    double fovY,aspectRatio,near,far,limit_x,limit_y,front_limit,rear_limit;
+    int screen_width,screen_height;
 
     ofstream file;
     double n;
+    ifstream config;
 
 
 
     freopen("scene.txt","r",stdin);
+    config.open("config.txt",ios::in);
 
     cin>>eye.x>>eye.y>>eye.z;
     cin>>look.x>>look.y>>look.z;
     cin>>up.x>>up.y>>up.z;
     cin>>fovY>>aspectRatio>>near>>far;
+    config>>screen_width>>screen_height;
+    config>>limit_x>>limit_y>>front_limit>>rear_limit;
 
     space s;
     s.calculateView(eye,look,up);
@@ -472,8 +712,10 @@ int main()
         }
         else if(input=="end")
         {
-            return 0;
+            break;
         }
     }
+    s.z_bufferAlgo(screen_width,screen_height,limit_x,limit_y,front_limit,rear_limit);
     file.close();
+    config.close();
 }
