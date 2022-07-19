@@ -541,159 +541,210 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
     {
 
         Triangle t=objects[i];
-        point top_point,left_p,right_p;
+
         double max_y=maximum(t.p1.y,t.p2.y,t.p3.y);
         double min_y=minimum(t.p1.y,t.p2.y,t.p3.y);
 
 
-        if(max_y==t.p1.y)
-        {
-            if(max_y==t.p2.y)
-            {
-                top_point=t.p3;
-                if(t.p2.x>t.p1.x)
-                {
-                    right_p=t.p2;
-                    left_p=t.p1;
-                }
-                else
-                {
-                    left_p=t.p2;
-                    right_p=t.p1;
-                }
-            }
-            else if(max_y==t.p3.y)
-            {
-                top_point=t.p2;
-                if(t.p1.x>t.p3.x)
-                {
-                    right_p=t.p1;
-                    left_p=t.p3;
-                }
-                else
-                {
-                    left_p=t.p1;
-                    right_p=t.p3;
-                }
 
-            }
-            else
-            {
-                top_point=t.p1;
-                if(t.p2.x>t.p3.x)
-                {
-                    right_p=t.p2;
-                    left_p=t.p3;
-                }
-                else
-                {
-                    left_p=t.p2;
-                    right_p=t.p3;
-                }
-            }
 
-        }
-
-        else if(max_y==t.p2.y)
-        {
-            if(max_y==t.p3.y)
-            {
-                top_point=t.p1;
-                if(t.p2.x>t.p3.x)
-                {
-                    right_p=t.p2;
-                    left_p=t.p3;
-                }
-                else
-                {
-                    left_p=t.p2;
-                    right_p=t.p3;
-                }
-
-            }
-            else if(max_y==t.p1.y)
-            {
-                top_point=t.p3;
-                if(t.p2.x>t.p1.x)
-                {
-                    right_p=t.p2;
-                    left_p=t.p1;
-                }
-                else
-                {
-                    left_p=t.p2;
-                    right_p=t.p1;
-                }
-            }
-            else
-            {
-                top_point=t.p2;
-                if(t.p1.x>t.p3.x)
-                {
-                    right_p=t.p1;
-                    left_p=t.p3;
-                }
-                else
-                {
-                    left_p=t.p1;
-                    right_p=t.p3;
-                }
-            }
-        }
-        else
-        {
-            if(max_y==t.p1.y)
-            {
-                top_point=t.p2;
-                if(t.p1.x>t.p3.x)
-                {
-                    right_p=t.p1;
-                    left_p=t.p3;
-                }
-                else
-                {
-                    left_p=t.p1;
-                    right_p=t.p3;
-                }
-            }
-            else if(max_y==t.p2.y)
-            {
-                top_point=t.p1;
-                if(t.p2.x>t.p3.x)
-                {
-                    right_p=t.p2;
-                    left_p=t.p3;
-                }
-                else
-                {
-                    left_p=t.p2;
-                    right_p=t.p3;
-                }
-            }
-            else
-            {
-                top_point=t.p3;
-                if(t.p2.x>t.p1.x)
-                {
-                    right_p=t.p2;
-                    left_p=t.p1;
-                }
-                else
-                {
-                    left_p=t.p2;
-                    right_p=t.p1;
-                }
-            }
-        }
         max_y=max_y>top_y?top_y:max_y;
         min_y=min_y<-top_y?-top_y:min_y;
-        int  top_scanline=int((top_y-max_y)/dy);
-        int bottom_scanline=int((top_y-min_y)/dy);
+        int  top_scanline=round((top_y-max_y)/dy);
+        int bottom_scanline=round((top_y-min_y)/dy);
         //cout<<"Scanliness----->"<<endl;
         //cout<<top_scanline<<" "<<bottom_scanline<<endl;
         for (int r=top_scanline; r<bottom_scanline; r++)
         {
             double y=top_y-r*dy;
+
+            point top_point,left_p,right_p;
+            if(t.p1.y>=y&&t.p2.y<y&&t.p3.y<y)
+            {
+               top_point=t.p1;
+                if(t.p2.x>t.p3.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p3;
+                }
+            }
+            else if(t.p1.y>y&&t.p2.y<=y&&t.p3.y<=y)
+            {
+                top_point=t.p1;
+                if(t.p2.x>t.p3.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p3;
+                }
+
+            }
+            else if(t.p2.y>=y&&t.p3.y<y&&t.p1.y<y)
+            {
+                top_point=t.p2;
+                if(t.p1.x>t.p3.x)
+                {
+                    right_p=t.p1;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p1;
+                    right_p=t.p3;
+                }
+
+            }
+            else if(t.p2.y>y&&t.p1.y<=y&&t.p3.y<=y)
+            {
+                top_point=t.p2;
+                if(t.p1.x>t.p3.x)
+                {
+                    right_p=t.p1;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p1;
+                    right_p=t.p3;
+                }
+
+            }
+            else if(t.p3.y>=y&&t.p2.y<y&&t.p1.y<y)
+            {
+                top_point=t.p3;
+                if(t.p2.x>t.p1.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p1;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p1;
+                }
+
+            }
+            else if(t.p3.y>y&&t.p2.y<=y&&t.p1.y<=y)
+            {
+                top_point=t.p3;
+                if(t.p2.x>t.p1.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p1;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p1;
+                }
+
+            }
+             else if(t.p1.y<=y&&t.p2.y>y&&t.p3.y>y)
+            {
+                top_point=t.p1;
+                if(t.p2.x>t.p3.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p3;
+                }
+
+            }
+            else if(t.p1.y<y&&t.p2.y>=y&&t.p3.y>=y)
+            {
+                top_point=t.p1;
+                if(t.p2.x>t.p3.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p3;
+                }
+
+            }
+            else if(t.p2.y<=y&&t.p3.y>y&&t.p1.y>y)
+            {
+                top_point=t.p2;
+                if(t.p1.x>t.p3.x)
+                {
+                    right_p=t.p1;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p1;
+                    right_p=t.p3;
+                }
+
+            }
+            else if(t.p2.y<y&&t.p1.y>=y&&t.p3.y>=y)
+            {
+                top_point=t.p2;
+                if(t.p1.x>t.p3.x)
+                {
+                    right_p=t.p1;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p1;
+                    right_p=t.p3;
+                }
+
+            }
+            else if(t.p3.y<=y&&t.p2.y>y&&t.p1.y>y)
+            {
+                top_point=t.p3;
+                if(t.p2.x>t.p1.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p1;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p1;
+                }
+
+            }
+            else if(t.p3.y<y&&t.p2.y>=y&&t.p1.y>=y)
+            {
+                top_point=t.p3;
+                if(t.p2.x>t.p1.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p1;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p1;
+                }
+
+            }
+            else
+            {
+               // continue;
+            }
+
+
+
 
             double m1,m2,m3;
             m1= intersect(top_point,left_p,axisY,y,axisX);
@@ -706,7 +757,9 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
             double zp,c,za,zb,xa,xb;
             if(m1==inf||m2==inf)
             {
-                 cout<<"Infinity ashe m1 m2"<<endl;
+                cout<<"y=="<<y<<endl;
+                 cout<<"Infinity ashe m1 m2 Triangle no :"<<i<<endl;
+
                 continue;
             }
 
@@ -765,7 +818,7 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
 
             if(z_buffer[i][j]<max_z)
             {
-                st4 << std::setprecision(7) << std::fixed;
+                st4 << std::setprecision(6) << std::fixed;
                 st4<<z_buffer[i][j]<<" ";
             }
 
