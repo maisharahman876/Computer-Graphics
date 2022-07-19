@@ -1,9 +1,10 @@
 #include<bits/stdc++.h>
 #include <fstream>
 #define pi 3.141592653
-#define X 0
-#define Y 1
-#define Z 2
+#define axisX 0
+#define axisY 1
+#define axisZ 2
+#define inf 99999999
 #include "bitmap_image.hpp"
 using namespace std;
 double maximum(double a, double b, double c)
@@ -94,7 +95,7 @@ public :
     point p2;
     point p3;
     int r,g,b;
-    print()
+    void print()
     {
         p1.printPoint();
         p2.printPoint();
@@ -129,18 +130,31 @@ point Rodrigues(point xp, point a, double t)
 }
 double intersect(point p1,point p2,int axis1,double val,int axis2)
 {
-    double m;
-    if(axis1==Y&&axis2==X)
+    double m=0.0;
+    if(axis1==axisY&&axis2==axisX)
     {
-        m=(val-p1.y)*(p2.x-p1.x)/(p2.y-p2.y)+p1.x;
+        if((p2.y-p1.y)==0)
+            m=inf;
+        else
+            m=(val-p1.y)*(p2.x-p1.x)/(p2.y-p1.y)+p1.x;
+
     }
-    else if (axis1==Y&&axis2==Z)
+    else if (axis1==axisY&&axis2==axisZ)
     {
-        m=(val-p1.y)*(p2.z-p1.z)/(p2.y-p2.y)+p1.z;
+        if((p2.y-p1.y)==0)
+            m=inf;
+        else
+            m=(val-p1.y)*(p2.z-p1.z)/(p2.y-p1.y)+p1.z;
+
     }
-    else if (axis1==X&&axis2==Z)
+    else if (axis1==axisX&&axis2==axisZ)
     {
-        m=(val-p1.x)*(p2.z-p1.z)/(p2.x-p2.x)+p1.z;
+        if((p2.x-p1.x)==0)
+            m=inf;
+        else
+            m=(val-p1.x)*(p2.z-p1.z)/(p2.x-p1.x)+p1.z;
+
+
     }
     return m;
 }
@@ -176,12 +190,13 @@ public:
             }
         }
         stack.push(top);
+        srand(time(0));
         //calculateView();
 
         st1.open("stage1.txt",ios::out);
         st2.open("stage2.txt",ios::out);
         st3.open("stage3.txt",ios::out);
-        st4.open("stage4.txt",ios::out);
+        st4.open("z_buffer.txt",ios::out);
     }
     void print();
     void drawTriangle(point,point,point);
@@ -281,7 +296,7 @@ void space::drawTriangle(point p1,point p2,point p3)
     t.p1=n_p1;
     t.p2=n_p2;
     t.p3=n_p3;
-    srand(time(0));
+
     t.r=rand()%255;
     t.g=rand()%255;
     t.b=rand()%255;
@@ -521,85 +536,209 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
             z_buffer[i][j]=max_z;
         }
     }
+
     for(int i=0; i<objects.size(); i++)
     {
+
         Triangle t=objects[i];
+        point top_point,left_p,right_p;
         double max_y=maximum(t.p1.y,t.p2.y,t.p3.y);
         double min_y=minimum(t.p1.y,t.p2.y,t.p3.y);
 
+
+        if(max_y==t.p1.y)
+        {
+            if(max_y==t.p2.y)
+            {
+                top_point=t.p3;
+                if(t.p2.x>t.p1.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p1;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p1;
+                }
+            }
+            else if(max_y==t.p3.y)
+            {
+                top_point=t.p2;
+                if(t.p1.x>t.p3.x)
+                {
+                    right_p=t.p1;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p1;
+                    right_p=t.p3;
+                }
+
+            }
+            else
+            {
+                top_point=t.p1;
+                if(t.p2.x>t.p3.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p3;
+                }
+            }
+
+        }
+
+        else if(max_y==t.p2.y)
+        {
+            if(max_y==t.p3.y)
+            {
+                top_point=t.p1;
+                if(t.p2.x>t.p3.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p3;
+                }
+
+            }
+            else if(max_y==t.p1.y)
+            {
+                top_point=t.p3;
+                if(t.p2.x>t.p1.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p1;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p1;
+                }
+            }
+            else
+            {
+                top_point=t.p2;
+                if(t.p1.x>t.p3.x)
+                {
+                    right_p=t.p1;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p1;
+                    right_p=t.p3;
+                }
+            }
+        }
+        else
+        {
+            if(max_y==t.p1.y)
+            {
+                top_point=t.p2;
+                if(t.p1.x>t.p3.x)
+                {
+                    right_p=t.p1;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p1;
+                    right_p=t.p3;
+                }
+            }
+            else if(max_y==t.p2.y)
+            {
+                top_point=t.p1;
+                if(t.p2.x>t.p3.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p3;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p3;
+                }
+            }
+            else
+            {
+                top_point=t.p3;
+                if(t.p2.x>t.p1.x)
+                {
+                    right_p=t.p2;
+                    left_p=t.p1;
+                }
+                else
+                {
+                    left_p=t.p2;
+                    right_p=t.p1;
+                }
+            }
+        }
         max_y=max_y>top_y?top_y:max_y;
         min_y=min_y<-top_y?-top_y:min_y;
         int  top_scanline=int((top_y-max_y)/dy);
         int bottom_scanline=int((top_y-min_y)/dy);
-
+        //cout<<"Scanliness----->"<<endl;
+        //cout<<top_scanline<<" "<<bottom_scanline<<endl;
         for (int r=top_scanline; r<bottom_scanline; r++)
         {
             double y=top_y-r*dy;
-            double m1,m2,m3;
-            m1= intersect(t.p1,t.p2,Y,y,X);
-            m2=intersect(t.p2,t.p3,Y,y,X);
-            m3=intersect(t.p3,t.p1,Y,y,X);
-            double max_x;
-            double min_x;
-            double zp,c,za,zb,xa,xb;
-            if(m1>=m2&&m1>=m3)
-            {
-                zb=intersect(t.p1,t.p2,Y,y,Z);
-                xb=max_x=m1;
 
-            }
-            else if(m2>=m1&&m2>=m3)
+            double m1,m2,m3;
+            m1= intersect(top_point,left_p,axisY,y,axisX);
+            m2=intersect(top_point,right_p,axisY,y,axisX);
+
+
+
+            double max_x=0.0;
+            double min_x=0.0;
+            double zp,c,za,zb,xa,xb;
+            if(m1==inf||m2==inf)
             {
-                zb=intersect(t.p2,t.p3,Y,y,Z);
-                xb=max_x=m2;
+                 cout<<"Infinity ashe m1 m2"<<endl;
+                continue;
             }
-            else
-            {
-                zb=intersect(t.p3,t.p1,Y,y,Z);
-                xb=max_x=m3;
-            }
-            if(m1<=m2&&m1<=m3)
-            {
-                za=intersect(t.p1,t.p2,Y,y,Z);
+
+                za=intersect(top_point,left_p,axisY,y,axisZ);
                 xa=min_x=m1;
+
+                zb=intersect(top_point,right_p,axisY,y,axisZ);
+                xb=max_x=m2;
                 if(m1<left_x)
                 {
-                    zp=intersect(t.p1,t.p2,X,left_x,Z);
+                    zp=intersect(top_point,left_p,axisX,left_x,axisZ);
                     min_x=left_x;
                 }
                 else
                     zp=za;
-            }
-            else if(m2<=m1&&m2<=m3)
-            {
-                za=intersect(t.p2,t.p3,Y,y,Z);
-                xa=min_x=m2;
-                if(m2<left_x)
-                {
-                    zp=intersect(t.p2,t.p3,X,left_x,Z);
-                    min_x=left_x;
-                }
-                else
-                    zp=za;
-            }
-            else
-            {
-                za=intersect(t.p3,t.p1,Y,y,Z);
-                xa=min_x=m3;
-                if(m3<left_x)
-                {
-                    zp=intersect(t.p3,t.p1,X,left_x,Z);
-                    min_x=left_x;
-                }
-                else
-                    zp=za;
-            }
+
+
             if(max_x>-left_x)
                 max_x=-left_x;
 
             c=(zb-za)*dx/(xb-xa);
+            if(zb==inf||za==inf)
+            {
+                cout<<"Infinity ashe za zb"<<endl;
+                continue;
+
+            }
+
+
             int left_scanline=int((min_x-left_x)/dx);
             int right_scanline=int((max_x-left_x)/dx);
+
             for(int col=left_scanline; col<right_scanline; col++)
             {
                 if(zp<max_z&&zp>min_z)
@@ -607,7 +746,7 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
                     if(zp<z_buffer[r][col])
                     {
                         z_buffer[r][col]=zp;
-                        image.set_pixel(r,col,t.r,t.g,t.b);
+                        image.set_pixel(col,r,t.r,t.g,t.b);
 
                     }
                 }
@@ -619,18 +758,22 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
         }
 
     }
-    for(int i=0;i<h;i++)
-        for(int j=0;j<w;j++)
+    for(int i=0; i<h; i++)
     {
-
-        if(z_buffer[i][j]<max_z)
+       for(int j=0; j<w; j++)
         {
-            st2 << std::setprecision(7) << std::fixed;
-            st4<<z_buffer[i][j]<<" ";
+
+            if(z_buffer[i][j]<max_z)
+            {
+                st4 << std::setprecision(7) << std::fixed;
+                st4<<z_buffer[i][j]<<" ";
+            }
+
         }
         st4<<endl;
     }
-image.save_image("out.bmp");
+
+    image.save_image("out.bmp");
 
 }
 int main()
@@ -718,4 +861,5 @@ int main()
     s.z_bufferAlgo(screen_width,screen_height,limit_x,limit_y,front_limit,rear_limit);
     file.close();
     config.close();
+    return 0;
 }
