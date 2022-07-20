@@ -550,11 +550,11 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
 
         max_y=max_y>top_y?top_y:max_y;
         min_y=min_y<-top_y?-top_y:min_y;
-        int  top_scanline=round((top_y-max_y)/dy);
-        int bottom_scanline=round((top_y-min_y)/dy);
+        int  top_scanline=int((top_y-max_y)/dy);
+        int bottom_scanline=int((top_y-min_y)/dy);
         //cout<<"Scanliness----->"<<endl;
         //cout<<top_scanline<<" "<<bottom_scanline<<endl;
-        for (int r=top_scanline; r<bottom_scanline; r++)
+        for (int r=top_scanline; r<=bottom_scanline; r++)
         {
             double y=top_y-r*dy;
 
@@ -792,7 +792,7 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
             int left_scanline=int((min_x-left_x)/dx);
             int right_scanline=int((max_x-left_x)/dx);
 
-            for(int col=left_scanline; col<right_scanline; col++)
+            for(int col=left_scanline; col<=right_scanline; col++)
             {
                 if(zp<max_z&&zp>min_z)
                 {
