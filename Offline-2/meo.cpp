@@ -213,17 +213,18 @@ public:
     {
         for(int i = 0; i < 4; i++)
         {
-            delete current[i];
-            delete V[i];
-            delete P[i];
+            delete[] current[i];
+            delete[] V[i];
+            delete[] P[i];
 
         }
-        delete current;
-        delete V;
-        delete P;
+        delete[] current;
+        delete[] V;
+        delete[] P;
         st1.close();
         st2.close();
         st3.close();
+        st4.close();
     }
 
 };
@@ -279,7 +280,7 @@ double** space::draw(point p)
     st1<<endl;
     st2<<endl;
     st3<<endl;
-    cout<<endl;
+
     return p3;
 
 
@@ -290,7 +291,7 @@ void space::drawTriangle(point p1,point p2,point p3)
     double** d2=draw(p2);
     double** d3=draw(p3);
 
-    cout<<endl;
+    //cout<<endl;
     point n_p1(d1[0][0]/d1[3][0],d1[1][0]/d1[3][0],d1[2][0]/d1[3][0]),n_p2(d2[0][0]/d2[3][0],d2[1][0]/d2[3][0],d2[2][0]/d2[3][0]),n_p3(d3[0][0]/d3[3][0],d3[1][0]/d3[3][0],d3[2][0]/d3[3][0]);
     Triangle t;
     t.p1=n_p1;
@@ -301,8 +302,8 @@ void space::drawTriangle(point p1,point p2,point p3)
     t.g=rand()%255;
     t.b=rand()%255;
     objects.push_back(t);
-    t.print();
-    cout<<endl;
+
+
     st1<<endl;
     st2<<endl;
     st3<<endl;
@@ -329,9 +330,9 @@ void space::pop()
 {
     for(int i = 0; i < 4; i++)
     {
-        delete current[i];
+        delete[] current[i];
     }
-    delete current;
+    delete[] current;
     current=stack.top();
     stack.pop();
 }
@@ -561,7 +562,7 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
             point top_point,left_p,right_p;
             if(t.p1.y>=y&&t.p2.y<y&&t.p3.y<y)
             {
-               top_point=t.p1;
+                top_point=t.p1;
                 if(t.p2.x>t.p3.x)
                 {
                     right_p=t.p2;
@@ -648,7 +649,7 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
                 }
 
             }
-             else if(t.p1.y<=y&&t.p2.y>y&&t.p3.y>y)
+            else if(t.p1.y<=y&&t.p2.y>y&&t.p3.y>y)
             {
                 top_point=t.p1;
                 if(t.p2.x>t.p3.x)
@@ -740,7 +741,7 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
             }
             else
             {
-               // continue;
+                continue;
             }
 
 
@@ -757,24 +758,22 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
             double zp,c,za,zb,xa,xb;
             if(m1==inf||m2==inf)
             {
-                cout<<"y=="<<y<<endl;
-                 cout<<"Infinity ashe m1 m2 Triangle no :"<<i<<endl;
 
                 continue;
             }
 
-                za=intersect(top_point,left_p,axisY,y,axisZ);
-                xa=min_x=m1;
+            za=intersect(top_point,left_p,axisY,y,axisZ);
+            xa=min_x=m1;
 
-                zb=intersect(top_point,right_p,axisY,y,axisZ);
-                xb=max_x=m2;
-                if(m1<left_x)
-                {
-                    zp=intersect(top_point,left_p,axisX,left_x,axisZ);
-                    min_x=left_x;
-                }
-                else
-                    zp=za;
+            zb=intersect(top_point,right_p,axisY,y,axisZ);
+            xb=max_x=m2;
+            if(m1<left_x)
+            {
+                zp=intersect(top_point,left_p,axisX,left_x,axisZ);
+                min_x=left_x;
+            }
+            else
+                zp=za;
 
 
             if(max_x>-left_x)
@@ -783,7 +782,6 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
             c=(zb-za)*dx/(xb-xa);
             if(zb==inf||za==inf)
             {
-                cout<<"Infinity ashe za zb"<<endl;
                 continue;
 
             }
@@ -813,7 +811,7 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
     }
     for(int i=0; i<h; i++)
     {
-       for(int j=0; j<w; j++)
+        for(int j=0; j<w; j++)
         {
 
             if(z_buffer[i][j]<max_z)
@@ -827,6 +825,12 @@ void space::z_bufferAlgo(int w,int h,double lx, double ly, double min_z,double m
     }
 
     image.save_image("out.bmp");
+    for(int i = 0; i < h; i++)
+    {
+        delete[] z_buffer[i];
+    }
+    delete[] z_buffer;
+
 
 }
 int main()
@@ -867,7 +871,7 @@ int main()
     {
         string input;
         cin>>input;
-        cout<<input<<endl;
+        //cout<<input<<endl;
         point p1,p2,p3;
         if(input=="triangle")
         {
