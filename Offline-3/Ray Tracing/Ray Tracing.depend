@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1660591549 source:c:\users\maish\documents\github\computer-graphics\offline-3\ray tracing\main.cpp
+1660648671 source:c:\users\maish\documents\github\computer-graphics\offline-3\ray tracing\main.cpp
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
@@ -22,7 +22,7 @@
 	<GL/glu.h>
 	<stdlib.h>
 
-1660592082 c:\users\maish\documents\github\computer-graphics\offline-3\ray tracing\1705060_classes.h
+1660651240 c:\users\maish\documents\github\computer-graphics\offline-3\ray tracing\1705060_classes.h
 	<bits/stdc++.h>
 	<windows.h>
 	<GL/glut.h>
