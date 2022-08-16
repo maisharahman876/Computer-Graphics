@@ -6,14 +6,14 @@
 #include <GL/glut.h>
 //include classes.h
 #include "1705060_classes.h"
+#include "bitmap_image.hpp"
 
 #define pi (2*acos(0.0))
 using namespace std;
 double posx,posy,posz;
 double u[3],r[3],l[3];
 
-double cameraHeight;
-double cameraAngle;
+
 int drawgrid;
 int drawaxes;
 double angle;
@@ -22,7 +22,93 @@ double  floor_width=1000,tile_width=20;
 vector<Object*> objects_list;
 vector<PointLight*> point_lights_list;
 vector<SpotLight*> spot_lights_list;
+int windowWidth=600,windowHeight=600;
+double fovY=80;
 
+void capture()
+{
+    // initialize bitmap image and set background color
+
+
+    bitmap_image image(pixels,pixels);
+    //find the view angle from u r l
+    double planeDistance = (windowHeight/2.0) /tan(fovY*pi/180/2.0);
+    double *topleft=new double[3];
+
+    //topleft = eye + l*planeDistance - r*windowWidth/2 + u*windowHeight/2
+    topleft[0] = posx + l[0]*planeDistance - r[0]*windowWidth/2 + u[0]*windowHeight/2;
+    topleft[1] = posy + l[1]*planeDistance - r[1]*windowWidth/2 + u[1]*windowHeight/2;
+    topleft[2] = posz + l[2]*planeDistance - r[2]*windowWidth/2 + u[2]*windowHeight/2;
+
+    double du = windowWidth/pixels;
+    double dv = windowHeight/pixels;
+// Choose middle of the grid cell
+    //topleft = topleft + r*(0.5*du) - u*(0.5*dv)
+    topleft[0] = topleft[0] + r[0]*(0.5*du) - u[0]*(0.5*dv);
+    topleft[1] = topleft[1] + r[1]*(0.5*du) - u[1]*(0.5*dv);
+    topleft[2] = topleft[2] + r[2]*(0.5*du) - u[2]*(0.5*dv);
+    int nearest;
+    double t, tMin;
+// for i=1:imageWidth
+// for j=1:imageHeight
+    for(int i=0; i<pixels; i++)
+    {
+        for(int j=0; j<pixels; j++)
+        {
+            double *pixel=new double[3];
+            pixel[0] = topleft[0] + r[0]*(i)*du - u[0]*(j)*dv;
+            pixel[1] = topleft[1] + r[1]*(i)*du - u[1]*(j)*dv;
+            pixel[2] = topleft[2] + r[2]*(i)*du - u[2]*(j)*dv;
+
+            struct point origin,dir;
+            origin.x=posx;
+            origin.y=posy;
+            origin.z=posz;
+            dir.x=pixel[0]-posx;
+            dir.y=pixel[1]-posy;
+            dir.z=pixel[2]-posz;
+            Ray ray(origin,dir);
+            double *color =new double[3];
+            color[0]=0;
+            color[1]=0;
+            color[2]=0;
+            tMin = 99999999999;
+            nearest = -1;
+            for(int k=0; k<objects_list.size(); k++)
+            {
+                double t=objects_list[k]->intersect(ray,color,0);
+                if(t<tMin)
+                {
+                    tMin=t;
+                    nearest=k;
+                }
+            }
+            if(nearest!=-1)
+            {
+
+                double *color =new double[3];
+                color[0]=0;
+                color[1]=0;
+                color[2]=0;
+                tMin= objects_list[nearest]->intersect(ray,color,1);
+                image.set_pixel(i,j,color[0]*255,color[1]*255,color[2]*255);
+            }
+
+
+        }
+    }
+    image.save_image("image.bmp");
+}
+// calculate curPixel using topleft,r,u,i,j,du,dv
+// cast ray from eye to (curPixel-eye) direction
+// double *color = new double[3]
+// for each object, o in objects
+// t = o.intersect(ray, dummyColor, 0)
+// update t so that it stores min +ve value
+// save the nearest object, on
+// tmin = on->intersect(ray, color, 1)
+// update image pixel (i,j)
+// save image
 
 
 void drawAxes()
@@ -75,80 +161,6 @@ void drawGrid()
     }
 }
 
-
-
-
-
-
-void drawCone(double radius,double height,int segments)
-{
-    int i;
-    double shade;
-    struct point points[100];
-    //generate points
-    for(i=0; i<=segments; i++)
-    {
-        points[i].x=radius*cos(((double)i/(double)segments)*2*pi);
-        points[i].y=radius*sin(((double)i/(double)segments)*2*pi);
-    }
-    //draw triangles using generated points
-    for(i=0; i<segments; i++)
-    {
-        //create shading effect
-        if(i<segments/2)shade=2*(double)i/(double)segments;
-        else shade=2*(1.0-(double)i/(double)segments);
-        glColor3f(shade,shade,shade);
-
-        glBegin(GL_TRIANGLES);
-        {
-            glVertex3f(0,0,height);
-            glVertex3f(points[i].x,points[i].y,0);
-            glVertex3f(points[i+1].x,points[i+1].y,0);
-        }
-        glEnd();
-    }
-}
-
-
-
-void drawCylinder(double h,double r,int slices,int stacks)
-{
-    struct point points[100][100];
-    int i,j;
-
-    //generate points
-    for(i=0; i<=stacks; i++)
-    {
-
-        for(j=0; j<=slices; j++)
-        {
-
-
-            points[i][j].x=r*cos(j*pi/(2*slices));
-            points[i][j].y=r*sin(j*pi/(2*slices));
-            points[i][j].z=h*i/(stacks);
-
-        }
-    }
-    for(i=0; i<stacks; i++)
-    {
-        glColor3f(0.0,1.0,0.0);
-        for(j=0; j<slices; j++)
-        {
-            glBegin(GL_QUADS);
-            {
-                //upper hemisphere
-                glVertex3f(points[i][j].x,points[i][j].y,points[i][j].z);
-                glVertex3f(points[i][j+1].x,points[i][j+1].y,points[i][j+1].z);
-                glVertex3f(points[i+1][j+1].x,points[i+1][j+1].y,points[i+1][j+1].z);
-                glVertex3f(points[i+1][j].x,points[i+1][j].y,points[i+1][j].z);
-
-            }
-            glEnd();
-        }
-    }
-
-}
 
 
 void keyboardListener(unsigned char key, int x,int y)
@@ -332,20 +344,20 @@ void display()
     Object *f=new Floor(floor_width,tile_width);
     f->draw();
 
-    for(int i=0;i<objects;i++)
+    for(int i=0; i<objects; i++)
     {
         objects_list[i]->draw();
     }
-    for(int i=0;i<point_lights;i++)
+    for(int i=0; i<point_lights; i++)
     {
         point_lights_list[i]->draw();
     }
-    for(int i=0;i<spot_lights;i++)
+    for(int i=0; i<spot_lights; i++)
     {
         spot_lights_list[i]->draw();
     }
- drawAxes();
-drawGrid();
+    drawAxes();
+    drawGrid();
 
 
 
@@ -375,7 +387,7 @@ void loadData()
     cin>>pixels;
     cin>>objects;
     cout<<levels<<" "<<pixels<<" "<<objects<<endl;
-    for(int i=0;i<objects;i++)
+    for(int i=0; i<objects; i++)
     {
         string s;
         cin>>s;
@@ -384,8 +396,8 @@ void loadData()
             point center;
             int shininess;
             double radius;
-            double color[3];
-            double coeffs[4];
+            double *color=new double[3];
+            double *coeffs=new double[4];
             cin>>center.x>>center.y>>center.z;
             cin>>radius;
             cin>>color[0]>>color[1]>>color[2];
@@ -397,8 +409,8 @@ void loadData()
         else if(s=="triangle")
         {
             point p1,p2,p3;
-            double color[3];
-            double coeffs[4];
+            double *color=new double[3];
+            double *coeffs=new double[4];
             int shininess;
             cin>>p1.x>>p1.y>>p1.z;
             cin>>p2.x>>p2.y>>p2.z;
@@ -412,10 +424,10 @@ void loadData()
         }
         else if(s=="general")
         {
-            double coeffs[4];
-            double color[3];
+            double *coeffs=new double[4];
+            double *color=new double[3];
             int shininess;
-            double params[10];
+            double *params=new double[10];
             double length,width,height;
             struct point cube_ref;
             cin>>params[0]>>params[1]>>params[2]>>params[3]>>params[4]>>params[5]>>params[6]>>params[7]>>params[8]>>params[9];
@@ -428,20 +440,20 @@ void loadData()
         }
     }
     cin>>point_lights;
-    for(int i=0;i<point_lights;i++)
+    for(int i=0; i<point_lights; i++)
     {
         struct point p;
-        double color[3];
+        double *color=new double[3];
         cin>>p.x>>p.y>>p.z;
         cin>>color[0]>>color[1]>>color[2];
         PointLight *pl=new PointLight(p,color);
         point_lights_list.push_back(pl);
     }
     cin>>spot_lights;
-    for(int i=0;i<spot_lights;i++)
+    for(int i=0; i<spot_lights; i++)
     {
-       struct point p;
-        double color[3];
+        struct point p;
+        double *color=new double[3];
         struct point dir;
         double angle;
         cin>>p.x>>p.y>>p.z;
@@ -481,7 +493,7 @@ void init()
     glLoadIdentity();
 
     //give PERSPECTIVE parameters
-    gluPerspective(80,	1,	1,	1000.0);
+    gluPerspective(fovY,	1,	1,	1000.0);
     //field of view in the Y (vertically)
     //aspect ratio that determines the field of view in the X direction (horizontally)
     //near distance
@@ -492,7 +504,7 @@ int main(int argc, char **argv)
 {
 
     glutInit(&argc,argv);
-    glutInitWindowSize(1000, 1000);
+    glutInitWindowSize(windowWidth,windowHeight);
     glutInitWindowPosition(0, 0);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGB);	//Depth, Double buffer, RGB color
 
