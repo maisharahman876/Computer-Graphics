@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1660648671 source:c:\users\maish\documents\github\computer-graphics\offline-3\ray tracing\main.cpp
+1660772418 source:c:\users\maish\documents\github\computer-graphics\offline-3\ray tracing\main.cpp
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
@@ -7,6 +7,7 @@
 	<windows.h>
 	<GL/glut.h>
 	"1705060_classes.h"
+	"bitmap_image.hpp"
 
 1653938601 c:\program files\codeblocks\mingw\include\gl\glut.h
 	"freeglut_std.h"
@@ -22,8 +23,18 @@
 	<GL/glu.h>
 	<stdlib.h>
 
-1660651240 c:\users\maish\documents\github\computer-graphics\offline-3\ray tracing\1705060_classes.h
+1660772743 c:\users\maish\documents\github\computer-graphics\offline-3\ray tracing\1705060_classes.h
 	<bits/stdc++.h>
 	<windows.h>
 	<GL/glut.h>
+
+1658151168 c:\users\maish\documents\github\computer-graphics\offline-3\ray tracing\bitmap_image.hpp
+	<algorithm>
+	<cmath>
+	<cstdlib>
+	<fstream>
+	<iostream>
+	<iterator>
+	<limits>
+	<string>
 

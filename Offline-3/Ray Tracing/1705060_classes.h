@@ -1,6 +1,7 @@
 #include<bits/stdc++.h>
 #include <windows.h>
 #include <GL/glut.h>
+#define INF 999999
 #define pi 22/7
 using namespace std;
 struct point
@@ -17,6 +18,8 @@ public:
     {
         this->origin = origin;
         this->direction = direction;
+        // cout<<"origin: "<<origin.x<<" "<<origin.y<<" "<<origin.z<<endl;
+        // cout<<"direction: "<<direction.x<<" "<<direction.y<<" "<<direction.z<<endl;
     }
 
 };
@@ -75,6 +78,7 @@ public:
     void setColor(double *color)
     {
         this->color = color;
+        //cout<<color[0]<<" "<<color[1]<<" "<<color[2]<<endl;
     }
     void setCoEfficients(double *coEfficients)
     {
@@ -107,29 +111,48 @@ public:
     }
     double intersect(Ray r, double *color,int l)
     {
-        // double a,b,c,d,t1,t2;
-        // a = 1;
-        // b = 2*(r.origin.x*(r.direction.x) + r.origin.y*(r.direction.y) + r.origin.z*(r.direction.z));
-        // c = r.origin.x*r.origin.x + r.origin.y*r.origin.y + r.origin.z*r.origin.z - this->length*this->length;
-        // d = b*b - 4*a*c;
-        // if(d<0)
-        // {
-        //     return -1;
-        // }
-        // else
-        // {
-        //     t1 = (-b + sqrt(d))/(2*a);
-        //     t2 = (-b - sqrt(d))/(2*a);
-        //     if(t1<t2)
-        //     {
-        //         return t1;
-        //     }
-        //     else
-        //     {
-        //         return t2;
-        //     }
-        // }
-         return 0.0;
+         double a,b,c,d;
+         double t1,t2,t_min;
+        //  //a=Rd.Rd
+        //  a=1;
+        //  //b=2*Rd*R0
+        //  b=2*(r.origin.x*r.direction.x+r.origin.y*r.direction.y+r.origin.z*r.direction.z);
+        //  c=r.origin.x*r.origin.x+r.origin.y*r.origin.y+r.origin.z*r.origin.z-this->length*this->length;
+         a = pow(r.direction.x,2) + pow(r.direction.y,2) + pow(r.direction.z,2);
+         //b=2*Rd*(R0-Rc)
+         b=2*(r.origin.x*r.direction.x + r.origin.y*r.direction.y + r.origin.z*r.direction.z - (reference_point.x*r.direction.x + reference_point.y*r.direction.y + reference_point.z*r.direction.z));
+         //b = 2*(r.origin.x*r.direction.x + r.origin.y*r.direction.y + r.origin.z*r.direction.z);
+         //c=R0.R0+Rc.Rc-2*Rc.R0-Rr^2
+        c=pow(r.origin.x,2) + pow(r.origin.y,2) + pow(r.origin.z,2)+pow(reference_point.x,2)+pow(reference_point.y,2)+pow(reference_point.z,2)-2*(r.origin.x*reference_point.x + r.origin.y*reference_point.y + r.origin.z*reference_point.z)-pow(length,2); 
+            
+         d = b*b - 4*a*c;
+        
+        if(d<0)
+        {
+           t_min=INF;
+        }
+        else
+        {
+            t1 = (-b + sqrt(d))/(2*a);
+            t2 = (-b - sqrt(d))/(2*a);
+            if(t1<t2)
+            {
+                t_min = t1;
+            }
+            else
+            {
+                t_min = t2;
+            }
+        }
+
+       if(l==0)
+        return t_min;
+       color[0] = this->color[0]*this->coEfficients[0];
+        color[1] = this->color[1]*this->coEfficients[0];
+        color[2] = this->color[2]*this->coEfficients[0];
+        return t_min;
+
+        
     }
 
 
@@ -163,43 +186,40 @@ public:
     }
      double intersect(Ray r, double *color,int l)
     {
-        // double a,b,c,d,t1,t2;
-        // a = (p2.y - p1.y)*(p3.z - p1.z) - (p2.z - p1.z)*(p3.y - p1.y);
-        // b = (p2.z - p1.z)*(r.direction.x - r.origin.x) - (p2.x - p1.x)*(p3.z - p1.z);
-        // c = (p2.x - p1.x)*(p3.y - p1.y) - (p2.y - p1.y)*(r.direction.x - r.origin.x);
-        // d = -(a*r.origin.x + b*r.origin.y + c*r.origin.z);
-        // t1 = -(a*r.origin.x + b*r.origin.y + c*r.origin.z + d)/(a*r.direction.x + b*r.direction.y + c*r.direction.z);
-        // t2 = -(a*r.origin.x + b*r.origin.y + c*r.origin.z + d + a*r.direction.x + b*r.direction.y + c*r.direction.z)/(a*r.direction.x + b*r.direction.y + c*r.direction.z);
-        // if(t1<0)
-        // {
-        //     if(t2<0)
-        //     {
-        //         return -1;
-        //     }
-        //     else
-        //     {
-        //         return t2;
-        //     }
-        // }
-        // else
-        // {
-        //     if(t2<0)
-        //     {
-        //         return t1;
-        //     }
-        //     else
-        //     {
-        //         if(t1<t2)
-        //         {
-        //             return t1;
-        //         }
-        //         else
-        //         {
-        //             return t2;
-        //         }
-        //     }
-        // }
-         return 0.0;
+        double A;
+        double At,Ag,Ab;
+        double gamma,beta,t;
+        A=(p1.x-p2.x)*((p1.y-p3.y)*(r.direction.z)-(p1.z-p3.z)*(r.direction.y))-(p1.x-p3.x)*((p1.y-p2.y)*(r.direction.z)-(p1.z-p2.z)*(r.direction.y))+r.direction.x*((p1.y-p2.y)*(p1.z-p3.z)-(p1.z-p2.z)*(p1.y-p3.y));
+        At=(p1.x-p2.x)*((p1.y-p3.y)*(p1.z-r.origin.z)-(p1.z-p3.z)*(p1.y-r.origin.y))-(p1.x-p3.x)*((p1.y-p2.y)*(p1.z-r.origin.z)-(p1.z-p2.z)*(p1.y-r.origin.y))+(p1.x-r.origin.x)*((p1.y-p2.y)*(p1.z-p3.z)-(p1.z-p2.z)*(p1.y-p3.y));
+        Ab=(p1.x-r.origin.x)*((p1.y-p3.y)*(r.direction.z)-(p1.z-p3.z)*(r.direction.y))-(p1.x-p3.x)*((p1.y-r.origin.y)*(r.direction.z)-(p1.z-r.origin.z)*(r.direction.y))+r.direction.x*((p1.y-r.origin.y)*(p1.z-p3.z)-(p1.z-r.origin.z)*(p1.y-p3.y));
+        Ag=(p1.x-p2.x)*((p1.y-r.origin.y)*(r.direction.z)-(p1.z-r.origin.z)*(r.direction.y))-(p1.x-r.origin.x)*((p1.y-p2.y)*(r.direction.z)-(p1.z-p2.z)*(r.direction.y))+r.direction.x*((p1.y-p2.y)*(p1.z-r.origin.z)-(p1.z-p2.z)*(p1.y-r.origin.y));
+        
+        if(A==0)
+        {
+            return INF;
+        }
+        else
+        {
+            beta=Ab/A;
+            gamma=Ag/A;
+            if(beta>0&&gamma>0&&beta+gamma<1)
+            {
+                t=At/A;
+                
+            }
+            else
+            {
+                return INF;
+            }
+            
+        }
+        if(l==0)
+        return t;
+       color[0] = this->color[0]*this->coEfficients[0];
+        color[1] = this->color[1]*this->coEfficients[0];
+        color[2] = this->color[2]*this->coEfficients[0];
+         return t;
+        
     }
 };
 //class with general quadratic equation inherits from Object
@@ -225,7 +245,109 @@ public:
     }
      double intersect(Ray r, double *color,int l)
     {
-         return 0.0;
+        double A,B,C,D,E,F,G,H,I,J;
+        A=parameters[0];
+        B=parameters[1];
+        C=parameters[2];
+        D=parameters[3];
+        E=parameters[4];
+        F=parameters[5];
+        G=parameters[6];
+        H=parameters[7];
+        I=parameters[8];
+        J=parameters[9];
+        //Ax^2+By^2+Cz^2+Dxy+Exz+Fyz+Gx+Hy+Iz+J=0
+        //using px=Ro+tRd
+        //transforn it into at^2+bt+c=0 
+        double a,b,c,d;
+        a=A*r.direction.x*r.direction.x+B*r.direction.y*r.direction.y+C*r.direction.z*r.direction.z+D*r.direction.x*r.direction.y+E*r.direction.x*r.direction.z+F*r.direction.y*r.direction.z;
+        
+        b=2*(A*r.origin.x*r.direction.x+B*r.origin.y*r.direction.y+C*r.origin.z*r.direction.z);
+        b+=D*(r.origin.x*r.direction.y+r.origin.y*r.direction.x)+E*(r.origin.x*r.direction.z+r.origin.z*r.direction.x)+F*(r.origin.y*r.direction.z+r.origin.z*r.direction.y);
+        b+=G*r.direction.x+H*r.direction.y+I*r.direction.z;
+        
+        c=A*r.origin.x*r.origin.x+B*r.origin.y*r.origin.y+C*r.origin.z*r.origin.z+D*r.origin.x*r.origin.y+E*r.origin.x*r.origin.z+F*r.origin.y*r.origin.z;
+        c+=G*r.origin.x+H*r.origin.y+I*r.origin.z+J;
+
+        d=b*b-4*a*c;
+        double t_min,t_max;
+        if(a==0)
+        {
+            t_max=INF;
+            if(b==0)
+            {
+                t_min=INF;
+            }
+            else
+            {
+                t_min=-c/b;
+            }
+        }
+        else
+        {
+            if(d<0)
+            {
+                t_min=INF;
+                t_max=INF;
+            }
+            else if(d==0)
+            {
+                t_min=-b/(2*a);
+                t_max=INF;
+            }
+            else{
+                t_min=(-b-sqrt(d))/(2*a);
+                t_max=(-b+sqrt(d))/(2*a);
+
+            }
+        }
+        //clipping
+        if(t_min!=INF&&t_max!=INF)
+        {
+            if(t_min>0)
+            {
+                struct point intersect;
+                intersect.x=r.origin.x+t_min*r.direction.x;
+                intersect.y=r.origin.y+t_min*r.direction.y;
+                intersect.z=r.origin.z+t_min*r.direction.z;
+                if((this->length!=0&&(intersect.x<this->reference_point.x||intersect.x>this->reference_point.x+this->length))||(this->width!=0&&(intersect.y<this->reference_point.y||intersect.y>this->reference_point.y+this->width))||(this->height!=0&&(intersect.z<this->reference_point.z||intersect.z>this->reference_point.z+this->height)))
+                {
+                    t_min=INF;
+                }
+            }
+            if(t_max>0)
+            {
+                struct point intersect;
+                intersect.x=r.origin.x+t_max*r.direction.x;
+                intersect.y=r.origin.y+t_max*r.direction.y;
+                intersect.z=r.origin.z+t_max*r.direction.z;
+                if((this->length!=0&&(intersect.x<this->reference_point.x||intersect.x>this->reference_point.x+this->length))||(this->width!=0&&(intersect.y<this->reference_point.y||intersect.y>this->reference_point.y+this->width))||(this->height!=0&&(intersect.z<this->reference_point.z||intersect.z>this->reference_point.z+this->height)))
+                {
+                    t_min=INF;
+                }
+
+            }
+            if(t_min>t_max)
+                t_min=t_max;
+        }
+        else if(t_min!=INF&&t_min>0)
+        {
+             struct point intersect;
+                intersect.x=r.origin.x+t_min*r.direction.x;
+                intersect.y=r.origin.y+t_min*r.direction.y;
+                intersect.z=r.origin.z+t_min*r.direction.z;
+                if((this->length!=0&&(intersect.x<this->reference_point.x||intersect.x>this->reference_point.x+this->length))||(this->width!=0&&(intersect.y<this->reference_point.y||intersect.y>this->reference_point.y+this->width))||(this->height!=0&&(intersect.z<this->reference_point.z||intersect.z>this->reference_point.z+this->height)))
+                {
+                    t_min=INF;
+                }
+
+        }
+        if(l==0)
+         return t_min;
+        color[0] = this->color[0]*this->coEfficients[0];
+        color[1] = this->color[1]*this->coEfficients[0];
+        color[2] = this->color[2]*this->coEfficients[0];
+        return t_min;
     }
 };
 // point light class
@@ -241,33 +363,17 @@ public:
     }
     void draw()
     {
+        //draw a point
+        glPushMatrix();
+        glTranslated(position.x,position.y,position.z);
+        drawSphere(1,10,10,color);
+        glPopMatrix();
 
     }
       double intersect(Ray r, double *color,int l)
     {
-        // double a,b,c,d,t1,t2;
-        // a = 1;
-        // b = 2*(r.origin.x*(r.direction.x) + r.origin.y*(r.direction.y) + r.origin.z*(r.direction.z));
-        // c = r.origin.x*r.origin.x + r.origin.y*r.origin.y + r.origin.z*r.origin.z - this->length*this->length;
-        // d = b*b - 4*a*c;
-        // if(d<0)
-        // {
-        //     return -1;
-        // }
-        // else
-        // {
-        //     t1 = (-b + sqrt(d))/(2*a);
-        //     t2 = (-b - sqrt(d))/(2*a);
-        //     if(t1<t2)
-        //     {
-        //         return t1;
-        //     }
-        //     else
-        //     {
-        //         return t2;
-        //     }
-        // }
-         return 0.0;
+       
+        return 0.0;
     }
 };
 //spot light class
@@ -288,6 +394,12 @@ public:
     }
     void draw()
     {
+          //draw a point
+        glPushMatrix();
+        glTranslated(position.x,position.y,position.z);
+        drawSphere(1,10,10,color);
+        glPopMatrix();
+
 
     }
      double intersect(Ray r, double *color,int l)
@@ -340,7 +452,39 @@ public:
     }
      double intersect(Ray r, double *color,int l)
     {
-        return 0.0;
+       double t_min=INF;
+       struct point normal;
+        normal.x=0;
+        normal.y=0;
+        normal.z=-1;
+        if(r.direction.x*normal.x+r.direction.y*normal.y+r.direction.z*normal.z!=0)
+        
+        t_min=-(normal.x*r.origin.x+normal.y*r.origin.y+normal.z*r.origin.z)/(normal.x*r.direction.x+normal.y*r.direction.y+normal.z*r.direction.z);
+        struct point intersect;
+        intersect.x=r.origin.x+t_min*r.direction.x;
+        intersect.y=r.origin.y+t_min*r.direction.y;
+        intersect.z=r.origin.z+t_min*r.direction.z;
+        if(intersect.x<-this->width||intersect.x>this->width&&intersect.y<-this->length&&intersect.y>this->length)
+        {
+           t_min=INF;
+        }
+       
+        if(l==0)
+        return t_min;
+        if(t_min!=INF&&t_min>0)
+        {
+          double i,j;
+        i=intersect.x+this->width;
+        i=floor(i/this->tile_size);
+        j=intersect.y+this->length;
+        j=floor(j/this->tile_size);
+       color[0] = (int)(i+j)%2;
+        color[1] = (int)(i+j)%2;
+        color[2] = (int)(i+j)%2;
+        }
+        
+         return t_min;
+        
     }
 
 

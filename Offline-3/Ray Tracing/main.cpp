@@ -4,11 +4,12 @@
 #include<bits/stdc++.h>
 #include <windows.h>
 #include <GL/glut.h>
+#define INF 999999
 //include classes.h
 #include "1705060_classes.h"
 #include "bitmap_image.hpp"
 
-#define pi (2*acos(0.0))
+#define pi 22/7
 using namespace std;
 double posx,posy,posz;
 double u[3],r[3],l[3];
@@ -24,9 +25,11 @@ vector<PointLight*> point_lights_list;
 vector<SpotLight*> spot_lights_list;
 int windowWidth=600,windowHeight=600;
 double fovY=80;
+int imgCount;
 
 void capture()
 {
+    imgCount++;
     // initialize bitmap image and set background color
 
 
@@ -40,8 +43,9 @@ void capture()
     topleft[1] = posy + l[1]*planeDistance - r[1]*windowWidth/2 + u[1]*windowHeight/2;
     topleft[2] = posz + l[2]*planeDistance - r[2]*windowWidth/2 + u[2]*windowHeight/2;
 
-    double du = windowWidth/pixels;
-    double dv = windowHeight/pixels;
+    double du = 1.0*windowWidth/pixels;
+    double dv = 1.0*windowHeight/pixels;
+    //cout<<"du "<<du<<" dv "<<dv<<endl;
 // Choose middle of the grid cell
     //topleft = topleft + r*(0.5*du) - u*(0.5*dv)
     topleft[0] = topleft[0] + r[0]*(0.5*du) - u[0]*(0.5*dv);
@@ -59,6 +63,7 @@ void capture()
             pixel[0] = topleft[0] + r[0]*(i)*du - u[0]*(j)*dv;
             pixel[1] = topleft[1] + r[1]*(i)*du - u[1]*(j)*dv;
             pixel[2] = topleft[2] + r[2]*(i)*du - u[2]*(j)*dv;
+            //cout<<"pixel "<<pixel[0]<<" "<<pixel[1]<<" "<<pixel[2]<<endl;
 
             struct point origin,dir;
             origin.x=posx;
@@ -67,16 +72,22 @@ void capture()
             dir.x=pixel[0]-posx;
             dir.y=pixel[1]-posy;
             dir.z=pixel[2]-posz;
+            //normalize dir
+            double dir_length = sqrt(dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
+            dir.x = dir.x/dir_length;
+            dir.y = dir.y/dir_length;
+            dir.z = dir.z/dir_length;
             Ray ray(origin,dir);
             double *color =new double[3];
             color[0]=0;
             color[1]=0;
             color[2]=0;
-            tMin = 99999999999;
+            tMin = INF;
             nearest = -1;
             for(int k=0; k<objects_list.size(); k++)
             {
                 double t=objects_list[k]->intersect(ray,color,0);
+                
                 if(t<tMin)
                 {
                     tMin=t;
@@ -91,13 +102,14 @@ void capture()
                 color[1]=0;
                 color[2]=0;
                 tMin= objects_list[nearest]->intersect(ray,color,1);
+               
                 image.set_pixel(i,j,color[0]*255,color[1]*255,color[2]*255);
             }
 
 
         }
     }
-    image.save_image("image.bmp");
+    image.save_image("C:\\Users\\maish\\Documents\\GitHub\\Computer-Graphics\\Offline-3\\Ray Tracing\\Output_1"+to_string(imgCount)+".bmp");
 }
 // calculate curPixel using topleft,r,u,i,j,du,dv
 // cast ray from eye to (curPixel-eye) direction
@@ -222,6 +234,9 @@ void keyboardListener(unsigned char key, int x,int y)
         u[1]=u[1]*cos(-3*3.14/180)+y1*sin(-3*3.14/180);
         u[2]=u[2]*cos(-3*3.14/180)+z1*sin(-3*3.14/180);
         break;
+    case '0':
+        capture();
+        break;
     default:
         break;
     }
@@ -341,8 +356,7 @@ void display()
     ****************************/
     //add objects
 
-    Object *f=new Floor(floor_width,tile_width);
-    f->draw();
+    
 
     for(int i=0; i<objects; i++)
     {
@@ -383,10 +397,12 @@ void loadData()
     //     cout<<"Cannot open file"<<endl;
     //     exit(0);
     // }
+    Object *f=new Floor(floor_width,tile_width);
+    objects_list.push_back(f);
     cin>>levels;
     cin>>pixels;
     cin>>objects;
-    cout<<levels<<" "<<pixels<<" "<<objects<<endl;
+    //cout<<levels<<" "<<pixels<<" "<<objects<<endl;
     for(int i=0; i<objects; i++)
     {
         string s;
@@ -479,6 +495,7 @@ void init()
     r[0]=-0.907,r[1]=0.707,r[2]=0;
     l[0]=-0.707,l[1]=-0.707,l[2]=0;
     loadData();
+    imgCount=0;
     //box_a=50,cyl_r=25;
     //clear the screen
     glClearColor(0,0,0,0);
