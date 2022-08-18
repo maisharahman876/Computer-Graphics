@@ -9,7 +9,7 @@
 #include "1705060_classes.h"
 #include "bitmap_image.hpp"
 
-#define pi 22/7
+#define pi acos(-1.0)
 using namespace std;
 double posx,posy,posz;
 double u[3],r[3],l[3];
@@ -23,8 +23,8 @@ double  floor_width=1000,tile_width=20;
 vector<Object*> objects_list;
 vector<PointLight*> point_lights_list;
 vector<SpotLight*> spot_lights_list;
-int windowWidth=600,windowHeight=600;
-double fovY=80;
+double windowWidth=500,windowHeight=500;
+double fovY=80.0;
 int imgCount;
 
 void capture()
@@ -35,13 +35,14 @@ void capture()
 
     bitmap_image image(pixels,pixels);
     //find the view angle from u r l
-    double planeDistance = (windowHeight/2.0) /tan(fovY*pi/180/2.0);
+    double planeDistance = ((double)windowHeight/2.0) /tan(fovY/2.0*pi/180.0);
+   // cout<<"planeDistance "<<planeDistance<<endl;
     double *topleft=new double[3];
 
     //topleft = eye + l*planeDistance - r*windowWidth/2 + u*windowHeight/2
-    topleft[0] = posx + l[0]*planeDistance - r[0]*windowWidth/2 + u[0]*windowHeight/2;
-    topleft[1] = posy + l[1]*planeDistance - r[1]*windowWidth/2 + u[1]*windowHeight/2;
-    topleft[2] = posz + l[2]*planeDistance - r[2]*windowWidth/2 + u[2]*windowHeight/2;
+    topleft[0] = posx + l[0]*planeDistance - r[0]*(double)windowWidth/2.0 + u[0]*(double)windowHeight/2.0;
+    topleft[1] = posy + l[1]*planeDistance - r[1]*(double)windowWidth/2.0 + u[1]*(double)windowHeight/2.0;
+    topleft[2] = posz + l[2]*planeDistance - r[2]*(double)windowWidth/2.0 + u[2]*(double)windowHeight/2.0;
 
     double du = 1.0*windowWidth/pixels;
     double dv = 1.0*windowHeight/pixels;
@@ -51,6 +52,7 @@ void capture()
     topleft[0] = topleft[0] + r[0]*(0.5*du) - u[0]*(0.5*dv);
     topleft[1] = topleft[1] + r[1]*(0.5*du) - u[1]*(0.5*dv);
     topleft[2] = topleft[2] + r[2]*(0.5*du) - u[2]*(0.5*dv);
+    cout<<"topleft "<<topleft[0]<<" "<<topleft[1]<<" "<<topleft[2]<<endl;
     int nearest;
     double t, tMin;
 // for i=1:imageWidth
@@ -87,8 +89,8 @@ void capture()
             for(int k=0; k<objects_list.size(); k++)
             {
                 double t=objects_list[k]->intersect(ray,color,0);
-                
-                if(t<tMin)
+
+                if(t<tMin&&t>0)
                 {
                     tMin=t;
                     nearest=k;
@@ -102,7 +104,7 @@ void capture()
                 color[1]=0;
                 color[2]=0;
                 tMin= objects_list[nearest]->intersect(ray,color,1);
-               
+
                 image.set_pixel(i,j,color[0]*255,color[1]*255,color[2]*255);
             }
 
@@ -356,7 +358,7 @@ void display()
     ****************************/
     //add objects
 
-    
+
 
     for(int i=0; i<objects; i++)
     {
@@ -422,6 +424,7 @@ void loadData()
             Object *sphere=new Sphere(center,radius,color,coeffs,shininess);
             objects_list.push_back(sphere);
         }
+
         else if(s=="triangle")
         {
             point p1,p2,p3;
@@ -455,6 +458,7 @@ void loadData()
             objects_list.push_back(general);
         }
     }
+
     cin>>point_lights;
     for(int i=0; i<point_lights; i++)
     {
@@ -479,6 +483,10 @@ void loadData()
         SpotLight *sl=new SpotLight(p,color,dir,angle);
         spot_lights_list.push_back(sl);
     }
+    for(int i=0;i<=objects;i++)
+    {
+       objects_list[i]->setObjectsAndLights(objects_list,point_lights_list,spot_lights_list);
+    }
     //fin.close();
 
 }
@@ -488,12 +496,12 @@ void init()
     drawgrid=0;
     drawaxes=1;
     angle=0;
-    posx=150.0;
-    posy=150.0;
-    posz=50.0;
+    posx=-20;
+    posy=-200.0;
+    posz=70.0;
     u[0]=0,u[1]=0,u[2]=1;
-    r[0]=-0.907,r[1]=0.707,r[2]=0;
-    l[0]=-0.707,l[1]=-0.707,l[2]=0;
+    r[0]=1,r[1]=0,r[2]=0;
+    l[0]=0,l[1]=1,l[2]=0;
     loadData();
     imgCount=0;
     //box_a=50,cyl_r=25;

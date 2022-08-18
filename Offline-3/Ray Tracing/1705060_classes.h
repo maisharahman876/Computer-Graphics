@@ -2,12 +2,13 @@
 #include <windows.h>
 #include <GL/glut.h>
 #define INF 999999
-#define pi 22/7
+#define pi acos(-1.0)
 using namespace std;
 struct point
 {
     double x,y,z;
 };
+
 //Ray class
 class Ray
 {
@@ -63,7 +64,63 @@ void drawSphere(double radius,int slices,int stacks,double *color)
         }
     }
 }
+// point light class
+class PointLight
+{
+public:
+    struct point position;
+    double *color;
+    PointLight(struct point p, double *color)
+    {
+        this->color=color;
+        this->position = p;
+    }
+    void draw()
+    {
+        //draw a point
+        glPushMatrix();
+        glTranslatef(position.x,position.y,position.z);
+        drawSphere(1,10,10,color);
+        glPopMatrix();
 
+    }
+    double intersect(Ray r, double *color,int l)
+    {
+
+        return 0.0;
+    }
+};
+//spot light class
+class SpotLight
+{
+public:
+    struct point position;
+    double *color;
+    struct point direction;
+    double angle;
+    SpotLight(struct point p, double *color, struct point dir, double angle)
+    {
+
+        this->color=color;
+        this->position = p;
+        this->angle = angle;
+        this->direction = dir;
+    }
+    void draw()
+    {
+        //draw a point
+        glPushMatrix();
+        glTranslatef(position.x,position.y,position.z);
+        drawSphere(1,10,10,color);
+        glPopMatrix();
+
+
+    }
+    double intersect(Ray r, double *color,int l)
+    {
+        return 0.0;
+    }
+};
 class Object
 {
 public:
@@ -72,9 +129,15 @@ public:
     double *color;
     double *coEfficients ;
     int shine ;
+    vector<Object*> objects;
+    vector<PointLight*> pointLights;
+    vector<SpotLight*> spotLights;
 
     virtual void draw() {}
-    virtual double intersect(Ray r, double *color,int l) { return 0.0;}
+    virtual double intersect(Ray r, double *color,int l)
+    {
+        return 0.0;
+    }
     void setColor(double *color)
     {
         this->color = color;
@@ -87,6 +150,12 @@ public:
     void setShine(int shine)
     {
         this->shine = shine;
+    }
+    void setObjectsAndLights(vector<Object*> objects, vector<PointLight*> pointLights, vector<SpotLight*> spotLights)
+    {
+        this->objects = objects;
+        this->pointLights = pointLights;
+        this->spotLights = spotLights;
     }
 };
 //class Sphere inherits from Object
@@ -111,25 +180,25 @@ public:
     }
     double intersect(Ray r, double *color,int l)
     {
-         double a,b,c,d;
-         double t1,t2,t_min;
+        double a,b,c,d;
+        double t1,t2,t_min;
         //  //a=Rd.Rd
         //  a=1;
         //  //b=2*Rd*R0
         //  b=2*(r.origin.x*r.direction.x+r.origin.y*r.direction.y+r.origin.z*r.direction.z);
         //  c=r.origin.x*r.origin.x+r.origin.y*r.origin.y+r.origin.z*r.origin.z-this->length*this->length;
-         a = pow(r.direction.x,2) + pow(r.direction.y,2) + pow(r.direction.z,2);
-         //b=2*Rd*(R0-Rc)
-         b=2*(r.origin.x*r.direction.x + r.origin.y*r.direction.y + r.origin.z*r.direction.z - (reference_point.x*r.direction.x + reference_point.y*r.direction.y + reference_point.z*r.direction.z));
-         //b = 2*(r.origin.x*r.direction.x + r.origin.y*r.direction.y + r.origin.z*r.direction.z);
-         //c=R0.R0+Rc.Rc-2*Rc.R0-Rr^2
-        c=pow(r.origin.x,2) + pow(r.origin.y,2) + pow(r.origin.z,2)+pow(reference_point.x,2)+pow(reference_point.y,2)+pow(reference_point.z,2)-2*(r.origin.x*reference_point.x + r.origin.y*reference_point.y + r.origin.z*reference_point.z)-pow(length,2); 
-            
-         d = b*b - 4*a*c;
-        
+        a = pow(r.direction.x,2) + pow(r.direction.y,2) + pow(r.direction.z,2);
+        //b=2*Rd*(R0-Rc)
+        b=2*(r.origin.x*r.direction.x + r.origin.y*r.direction.y + r.origin.z*r.direction.z - (reference_point.x*r.direction.x + reference_point.y*r.direction.y + reference_point.z*r.direction.z));
+        //b = 2*(r.origin.x*r.direction.x + r.origin.y*r.direction.y + r.origin.z*r.direction.z);
+        //c=R0.R0+Rc.Rc-2*Rc.R0-Rr^2
+        c=pow(r.origin.x,2) + pow(r.origin.y,2) + pow(r.origin.z,2)+pow(reference_point.x,2)+pow(reference_point.y,2)+pow(reference_point.z,2)-2*(r.origin.x*reference_point.x + r.origin.y*reference_point.y + r.origin.z*reference_point.z)-pow(length,2);
+
+        d = b*b - 4*a*c;
+
         if(d<0)
         {
-           t_min=INF;
+            t_min=INF;
         }
         else
         {
@@ -145,15 +214,175 @@ public:
             }
         }
 
-       if(l==0)
-        return t_min;
-       color[0] = this->color[0]*this->coEfficients[0];
+        if(l==0)
+            return t_min;
+        color[0] = this->color[0]*this->coEfficients[0];
         color[1] = this->color[1]*this->coEfficients[0];
         color[2] = this->color[2]*this->coEfficients[0];
+        //calculate the intersection point
+        struct point intersection_point;
+        intersection_point.x = r.origin.x + t_min*r.direction.x;
+        intersection_point.y = r.origin.y + t_min*r.direction.y;
+        intersection_point.z = r.origin.z + t_min*r.direction.z;
+        //calculate normal
+        struct point normal;
+        normal.x = intersection_point.x - reference_point.x;
+        normal.y = intersection_point.y - reference_point.y;
+        normal.z = intersection_point.z - reference_point.z;
+        //normalize normal
+        double normal_length = sqrt(pow(normal.x,2)+pow(normal.y,2)+pow(normal.z,2));
+        normal.x = normal.x/normal_length;
+        normal.y = normal.y/normal_length;
+        normal.z = normal.z/normal_length;
+        //dot product of -normal and ray direction
+        double dot_product = -normal.x*r.direction.x - normal.y*r.direction.y - normal.z*r.direction.z;
+        //if dot product is negative, reverse the normal
+        if(dot_product<0)
+        {
+            normal.x = -normal.x;
+            normal.y = -normal.y;
+            normal.z = -normal.z;
+        }
+        // for each point light pl in pointLights
+        for(int i=0;i<pointLights.size();i++)
+        {
+
+
+            struct point light_direction;
+            light_direction.x = intersection_point.x - pointLights[i]->position.x;
+            light_direction.y = intersection_point.y - pointLights[i]->position.y;
+            light_direction.z = intersection_point.z - pointLights[i]->position.z;
+
+           //normalize light_direction
+            double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
+            light_direction.x = light_direction.x/light_direction_length;
+            light_direction.y = light_direction.y/light_direction_length;
+            light_direction.z = light_direction.z/light_direction_length;
+            Ray ray1(pointLights[i]->position,light_direction);
+
+            //check if the object is in shadow
+            double tmin = INF,t3;
+            for(int j=0;j<objects.size();j++)
+            {
+                double *color1 = new double[3];
+                color1[0] = 0;
+                color1[1] = 0;
+                color1[2] = 0;
+                t3 = objects[j]->intersect(ray1,color1,0);
+                if(t3<tmin&&t3>0)
+                {
+                    tmin = t3;
+                }
+            }
+            struct point Tmin_point;
+            Tmin_point.x = ray1.origin.x + tmin*ray1.direction.x;
+            Tmin_point.y = ray1.origin.y + tmin*ray1.direction.y;
+            Tmin_point.z = ray1.origin.z + tmin*ray1.direction.z;
+            //distance betn tmin_point and light
+            double Tmin_dist = sqrt(pow(Tmin_point.x-pointLights[i]->position.x,2)+pow(Tmin_point.y-pointLights[i]->position.y,2)+pow(Tmin_point.z-pointLights[i]->position.z,2));
+            //distance betn intersection_point and light
+            double intersection_dist = sqrt(pow(intersection_point.x-pointLights[i]->position.x,2)+pow(intersection_point.y-pointLights[i]->position.y,2)+pow(intersection_point.z-pointLights[i]->position.z,2));
+            if(intersection_dist-0.0000001>Tmin_dist)
+            {
+                continue;
+            }
+            //calculate lambertValue using normal, rayl
+            double lambertValue = 0;
+            lambertValue=-(normal.x*light_direction.x+normal.y*light_direction.y+normal.z*light_direction.z);
+            //calculate reflected ray
+            struct point reflected_ray_direction;
+            //2*(L.N)*N-L
+
+            reflected_ray_direction.x = 2*normal.x*lambertValue+light_direction.x;
+            reflected_ray_direction.y = 2*(normal.y*lambertValue)+light_direction.y;
+            reflected_ray_direction.z = 2*(normal.z*lambertValue)+light_direction.z;
+            Ray reflected_ray(intersection_point,reflected_ray_direction);
+
+            //calculate phongValue using normal, rayl, rayr
+            double phongValue = 0;
+            phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
+            //calculate the color
+            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+
+
+        }
+        for(int i=0;i<spotLights.size();i++)
+        {
+
+
+            struct point light_direction;
+            light_direction.x = intersection_point.x - spotLights[i]->position.x;
+            light_direction.y = intersection_point.y - spotLights[i]->position.y;
+            light_direction.z = intersection_point.z - spotLights[i]->position.z;
+            //if spotlight angle > cutoff angle, ignore the light
+            if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)>spotLights[i]->angle*pi/(180.0))
+            {
+                continue;
+            }
+
+           //normalize light_direction
+            double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
+            light_direction.x = light_direction.x/light_direction_length;
+            light_direction.y = light_direction.y/light_direction_length;
+            light_direction.z = light_direction.z/light_direction_length;
+            Ray ray1(pointLights[i]->position,light_direction);
+
+            //check if the object is in shadow
+            double tmin = INF,t3;
+            for(int j=0;j<objects.size();j++)
+            {
+                double *color1 = new double[3];
+                color1[0] = 0;
+                color1[1] = 0;
+                color1[2] = 0;
+                t3 = objects[j]->intersect(ray1,color1,0);
+                if(t3<tmin&&t3>0)
+                {
+                    tmin = t3;
+                }
+            }
+            struct point Tmin_point;
+            Tmin_point.x = ray1.origin.x + tmin*ray1.direction.x;
+            Tmin_point.y = ray1.origin.y + tmin*ray1.direction.y;
+            Tmin_point.z = ray1.origin.z + tmin*ray1.direction.z;
+            //distance betn tmin_point and light
+            double Tmin_dist = sqrt(pow(Tmin_point.x-spotLights[i]->position.x,2)+pow(Tmin_point.y-spotLights[i]->position.y,2)+pow(Tmin_point.z-spotLights[i]->position.z,2));
+            //distance betn intersection_point and light
+            double intersection_dist = sqrt(pow(intersection_point.x-spotLights[i]->position.x,2)+pow(intersection_point.y-spotLights[i]->position.y,2)+pow(intersection_point.z-spotLights[i]->position.z,2));
+            if(intersection_dist-0.0000001>Tmin_dist)
+            {
+                continue;
+            }
+            //calculate lambertValue using normal, rayl
+            double lambertValue = 0;
+            lambertValue=-(normal.x*light_direction.x+normal.y*light_direction.y+normal.z*light_direction.z);
+            //calculate reflected ray
+            struct point reflected_ray_direction;
+            //2*(L.N)*N-L
+
+            reflected_ray_direction.x = 2*normal.x*lambertValue+light_direction.x;
+            reflected_ray_direction.y = 2*(normal.y*lambertValue)+light_direction.y;
+            reflected_ray_direction.z = 2*(normal.z*lambertValue)+light_direction.z;
+            Ray reflected_ray(intersection_point,reflected_ray_direction);
+
+            //calculate phongValue using normal, rayl, rayr
+            double phongValue = 0;
+            phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
+            //calculate the color
+            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+
+
+        }
+
         return t_min;
 
-        
+
     }
+
 
 
 };
@@ -184,16 +413,16 @@ public:
         glEnd();
         glPopMatrix();
     }
-     double intersect(Ray r, double *color,int l)
+    double intersect(Ray r, double *color,int l)
     {
         double A;
         double At,Ag,Ab;
-        double gamma,beta,t;
+        double gamma,beta,t_min;
         A=(p1.x-p2.x)*((p1.y-p3.y)*(r.direction.z)-(p1.z-p3.z)*(r.direction.y))-(p1.x-p3.x)*((p1.y-p2.y)*(r.direction.z)-(p1.z-p2.z)*(r.direction.y))+r.direction.x*((p1.y-p2.y)*(p1.z-p3.z)-(p1.z-p2.z)*(p1.y-p3.y));
         At=(p1.x-p2.x)*((p1.y-p3.y)*(p1.z-r.origin.z)-(p1.z-p3.z)*(p1.y-r.origin.y))-(p1.x-p3.x)*((p1.y-p2.y)*(p1.z-r.origin.z)-(p1.z-p2.z)*(p1.y-r.origin.y))+(p1.x-r.origin.x)*((p1.y-p2.y)*(p1.z-p3.z)-(p1.z-p2.z)*(p1.y-p3.y));
         Ab=(p1.x-r.origin.x)*((p1.y-p3.y)*(r.direction.z)-(p1.z-p3.z)*(r.direction.y))-(p1.x-p3.x)*((p1.y-r.origin.y)*(r.direction.z)-(p1.z-r.origin.z)*(r.direction.y))+r.direction.x*((p1.y-r.origin.y)*(p1.z-p3.z)-(p1.z-r.origin.z)*(p1.y-p3.y));
         Ag=(p1.x-p2.x)*((p1.y-r.origin.y)*(r.direction.z)-(p1.z-r.origin.z)*(r.direction.y))-(p1.x-r.origin.x)*((p1.y-p2.y)*(r.direction.z)-(p1.z-p2.z)*(r.direction.y))+r.direction.x*((p1.y-p2.y)*(p1.z-r.origin.z)-(p1.z-p2.z)*(p1.y-r.origin.y));
-        
+
         if(A==0)
         {
             return INF;
@@ -204,22 +433,183 @@ public:
             gamma=Ag/A;
             if(beta>0&&gamma>0&&beta+gamma<1)
             {
-                t=At/A;
-                
+                t_min=At/A;
+
             }
             else
             {
                 return INF;
             }
-            
+
         }
         if(l==0)
-        return t;
-       color[0] = this->color[0]*this->coEfficients[0];
+            return t_min;
+        color[0] = this->color[0]*this->coEfficients[0];
         color[1] = this->color[1]*this->coEfficients[0];
         color[2] = this->color[2]*this->coEfficients[0];
-         return t;
-        
+         //calculate the intersection point
+        struct point intersection_point;
+        intersection_point.x = r.origin.x + t_min*r.direction.x;
+        intersection_point.y = r.origin.y + t_min*r.direction.y;
+        intersection_point.z = r.origin.z + t_min*r.direction.z;
+        //calculate normal
+        struct point normal;
+       //(p2-P1)cross (p3-P1)
+        normal.x = (p2.y-p1.y)*(p3.z-p1.z)-(p2.z-p1.z)*(p3.y-p1.y);
+        normal.y = (p2.z-p1.z)*(p3.x-p1.x)-(p2.x-p1.x)*(p3.z-p1.z);
+        normal.z = (p2.x-p1.x)*(p3.y-p1.y)-(p2.y-p1.y)*(p3.x-p1.x);
+        //normalize normal
+        double normal_length = sqrt(pow(normal.x,2)+pow(normal.y,2)+pow(normal.z,2));
+        normal.x = normal.x/normal_length;
+        normal.y = normal.y/normal_length;
+        normal.z = normal.z/normal_length;
+        //dot product of -normal and ray direction
+        double dot_product = -normal.x*r.direction.x - normal.y*r.direction.y - normal.z*r.direction.z;
+        //if dot product is negative, reverse the normal
+        if(dot_product<0)
+        {
+            normal.x = -normal.x;
+            normal.y = -normal.y;
+            normal.z = -normal.z;
+        }
+        // for each point light pl in pointLights
+        for(int i=0;i<pointLights.size();i++)
+        {
+
+
+            struct point light_direction;
+            light_direction.x = intersection_point.x - pointLights[i]->position.x;
+            light_direction.y = intersection_point.y - pointLights[i]->position.y;
+            light_direction.z = intersection_point.z - pointLights[i]->position.z;
+
+           //normalize light_direction
+            double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
+            light_direction.x = light_direction.x/light_direction_length;
+            light_direction.y = light_direction.y/light_direction_length;
+            light_direction.z = light_direction.z/light_direction_length;
+            Ray ray1(pointLights[i]->position,light_direction);
+
+            //check if the object is in shadow
+            double tmin = INF,t3;
+            for(int j=0;j<objects.size();j++)
+            {
+                double *color1 = new double[3];
+                color1[0] = 0;
+                color1[1] = 0;
+                color1[2] = 0;
+                t3 = objects[j]->intersect(ray1,color1,0);
+                if(t3<tmin&&t3>0)
+                {
+                    tmin = t3;
+                }
+            }
+            struct point Tmin_point;
+            Tmin_point.x = ray1.origin.x + tmin*ray1.direction.x;
+            Tmin_point.y = ray1.origin.y + tmin*ray1.direction.y;
+            Tmin_point.z = ray1.origin.z + tmin*ray1.direction.z;
+            //distance betn tmin_point and light
+            double Tmin_dist = sqrt(pow(Tmin_point.x-pointLights[i]->position.x,2)+pow(Tmin_point.y-pointLights[i]->position.y,2)+pow(Tmin_point.z-pointLights[i]->position.z,2));
+            //distance betn intersection_point and light
+            double intersection_dist = sqrt(pow(intersection_point.x-pointLights[i]->position.x,2)+pow(intersection_point.y-pointLights[i]->position.y,2)+pow(intersection_point.z-pointLights[i]->position.z,2));
+            if(intersection_dist-0.0000001>Tmin_dist)
+            {
+                continue;
+            }
+            //calculate lambertValue using normal, rayl
+            double lambertValue = 0;
+            lambertValue=-(normal.x*light_direction.x+normal.y*light_direction.y+normal.z*light_direction.z);
+            //calculate reflected ray
+            struct point reflected_ray_direction;
+            //2*(L.N)*N-L
+
+           reflected_ray_direction.x = 2*normal.x*lambertValue+light_direction.x;
+            reflected_ray_direction.y = 2*(normal.y*lambertValue)+light_direction.y;
+            reflected_ray_direction.z = 2*(normal.z*lambertValue)+light_direction.z;
+            Ray reflected_ray(intersection_point,reflected_ray_direction);
+
+            //calculate phongValue using normal, rayl, rayr
+            double phongValue = 0;
+            phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
+            //calculate the color
+            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+
+
+        }
+        for(int i=0;i<spotLights.size();i++)
+        {
+
+
+            struct point light_direction;
+            light_direction.x = intersection_point.x - spotLights[i]->position.x;
+            light_direction.y = intersection_point.y - spotLights[i]->position.y;
+            light_direction.z = intersection_point.z - spotLights[i]->position.z;
+            //if spotlight angle > cutoff angle, ignore the light
+             if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)>spotLights[i]->angle*pi/(180.0))
+            {
+                continue;
+            }
+
+           //normalize light_direction
+            double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
+            light_direction.x = light_direction.x/light_direction_length;
+            light_direction.y = light_direction.y/light_direction_length;
+            light_direction.z = light_direction.z/light_direction_length;
+            Ray ray1(pointLights[i]->position,light_direction);
+
+            //check if the object is in shadow
+            double tmin = INF,t3;
+            for(int j=0;j<objects.size();j++)
+            {
+                double *color1 = new double[3];
+                color1[0] = 0;
+                color1[1] = 0;
+                color1[2] = 0;
+                t3 = objects[j]->intersect(ray1,color1,0);
+                if(t3<tmin&&t3>0)
+                {
+                    tmin = t3;
+                }
+            }
+            struct point Tmin_point;
+            Tmin_point.x = ray1.origin.x + tmin*ray1.direction.x;
+            Tmin_point.y = ray1.origin.y + tmin*ray1.direction.y;
+            Tmin_point.z = ray1.origin.z + tmin*ray1.direction.z;
+            //distance betn tmin_point and light
+            double Tmin_dist = sqrt(pow(Tmin_point.x-spotLights[i]->position.x,2)+pow(Tmin_point.y-spotLights[i]->position.y,2)+pow(Tmin_point.z-spotLights[i]->position.z,2));
+            //distance betn intersection_point and light
+            double intersection_dist = sqrt(pow(intersection_point.x-spotLights[i]->position.x,2)+pow(intersection_point.y-spotLights[i]->position.y,2)+pow(intersection_point.z-spotLights[i]->position.z,2));
+            if(intersection_dist-0.0000001>Tmin_dist)
+            {
+                continue;
+            }
+            //calculate lambertValue using normal, rayl
+            double lambertValue = 0;
+            lambertValue=-(normal.x*light_direction.x+normal.y*light_direction.y+normal.z*light_direction.z);
+            //calculate reflected ray
+            struct point reflected_ray_direction;
+            //2*(L.N)*N-L
+
+            reflected_ray_direction.x = 2*normal.x*lambertValue+light_direction.x;
+            reflected_ray_direction.y = 2*(normal.y*lambertValue)+light_direction.y;
+            reflected_ray_direction.z = 2*(normal.z*lambertValue)+light_direction.z;
+            Ray reflected_ray(intersection_point,reflected_ray_direction);
+
+            //calculate phongValue using normal, rayl, rayr
+            double phongValue = 0;
+            phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
+            //calculate the color
+            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+
+
+        }
+
+        return t_min;
+
+
     }
 };
 //class with general quadratic equation inherits from Object
@@ -243,7 +633,7 @@ public:
     {
         //draw quadratic
     }
-     double intersect(Ray r, double *color,int l)
+    double intersect(Ray r, double *color,int l)
     {
         double A,B,C,D,E,F,G,H,I,J;
         A=parameters[0];
@@ -258,14 +648,14 @@ public:
         J=parameters[9];
         //Ax^2+By^2+Cz^2+Dxy+Exz+Fyz+Gx+Hy+Iz+J=0
         //using px=Ro+tRd
-        //transforn it into at^2+bt+c=0 
+        //transforn it into at^2+bt+c=0
         double a,b,c,d;
         a=A*r.direction.x*r.direction.x+B*r.direction.y*r.direction.y+C*r.direction.z*r.direction.z+D*r.direction.x*r.direction.y+E*r.direction.x*r.direction.z+F*r.direction.y*r.direction.z;
-        
+
         b=2*(A*r.origin.x*r.direction.x+B*r.origin.y*r.direction.y+C*r.origin.z*r.direction.z);
         b+=D*(r.origin.x*r.direction.y+r.origin.y*r.direction.x)+E*(r.origin.x*r.direction.z+r.origin.z*r.direction.x)+F*(r.origin.y*r.direction.z+r.origin.z*r.direction.y);
         b+=G*r.direction.x+H*r.direction.y+I*r.direction.z;
-        
+
         c=A*r.origin.x*r.origin.x+B*r.origin.y*r.origin.y+C*r.origin.z*r.origin.z+D*r.origin.x*r.origin.y+E*r.origin.x*r.origin.z+F*r.origin.y*r.origin.z;
         c+=G*r.origin.x+H*r.origin.y+I*r.origin.z+J;
 
@@ -295,12 +685,22 @@ public:
                 t_min=-b/(2*a);
                 t_max=INF;
             }
-            else{
+            else
+            {
                 t_min=(-b-sqrt(d))/(2*a);
                 t_max=(-b+sqrt(d))/(2*a);
 
             }
         }
+        if(t_min>t_max)
+        {
+            double temp=t_min;
+            t_min=t_max;
+            t_max=temp;
+        }
+        if(t_min<0)
+            t_min=INF;
+
         //clipping
         if(t_min!=INF&&t_max!=INF)
         {
@@ -323,7 +723,7 @@ public:
                 intersect.z=r.origin.z+t_max*r.direction.z;
                 if((this->length!=0&&(intersect.x<this->reference_point.x||intersect.x>this->reference_point.x+this->length))||(this->width!=0&&(intersect.y<this->reference_point.y||intersect.y>this->reference_point.y+this->width))||(this->height!=0&&(intersect.z<this->reference_point.z||intersect.z>this->reference_point.z+this->height)))
                 {
-                    t_min=INF;
+                    t_max=INF;
                 }
 
             }
@@ -332,81 +732,181 @@ public:
         }
         else if(t_min!=INF&&t_min>0)
         {
-             struct point intersect;
-                intersect.x=r.origin.x+t_min*r.direction.x;
-                intersect.y=r.origin.y+t_min*r.direction.y;
-                intersect.z=r.origin.z+t_min*r.direction.z;
-                if((this->length!=0&&(intersect.x<this->reference_point.x||intersect.x>this->reference_point.x+this->length))||(this->width!=0&&(intersect.y<this->reference_point.y||intersect.y>this->reference_point.y+this->width))||(this->height!=0&&(intersect.z<this->reference_point.z||intersect.z>this->reference_point.z+this->height)))
-                {
-                    t_min=INF;
-                }
+            struct point intersect;
+            intersect.x=r.origin.x+t_min*r.direction.x;
+            intersect.y=r.origin.y+t_min*r.direction.y;
+            intersect.z=r.origin.z+t_min*r.direction.z;
+            if((this->length!=0&&(intersect.x<this->reference_point.x||intersect.x>this->reference_point.x+this->length))||(this->width!=0&&(intersect.y<this->reference_point.y||intersect.y>this->reference_point.y+this->width))||(this->height!=0&&(intersect.z<this->reference_point.z||intersect.z>this->reference_point.z+this->height)))
+            {
+                t_min=INF;
+            }
 
         }
         if(l==0)
-         return t_min;
+            return t_min;
         color[0] = this->color[0]*this->coEfficients[0];
         color[1] = this->color[1]*this->coEfficients[0];
         color[2] = this->color[2]*this->coEfficients[0];
+        struct point intersection_point;
+        intersection_point.x=r.origin.x+t_min*r.direction.x;
+        intersection_point.y=r.origin.y+t_min*r.direction.y;
+        intersection_point.z=r.origin.z+t_min*r.direction.z;
+        struct point normal;
+        //2Ax+Dy+Ez+G
+        normal.x = 2*A*intersection_point.x+D*intersection_point.y+E*intersection_point.z+G;
+        normal.y = 2*B*intersection_point.y+D*intersection_point.x+F*intersection_point.z+H;
+        normal.z = 2*C*intersection_point.z+E*intersection_point.x+F*intersection_point.y+I;
+        //normalize normal
+        double normal_length = sqrt(pow(normal.x,2)+pow(normal.y,2)+pow(normal.z,2));
+        normal.x = normal.x/normal_length;
+        normal.y = normal.y/normal_length;
+        normal.z = normal.z/normal_length;
+        //dot product of -normal and ray direction
+        double dot_product = -normal.x*r.direction.x - normal.y*r.direction.y - normal.z*r.direction.z;
+        //if dot product is negative, reverse the normal
+        if(dot_product<0)
+        {
+            normal.x = -normal.x;
+            normal.y = -normal.y;
+            normal.z = -normal.z;
+        }
+        // for each point light pl in pointLights
+        for(int i=0;i<pointLights.size();i++)
+        {
+
+
+            struct point light_direction;
+            light_direction.x = intersection_point.x - pointLights[i]->position.x;
+            light_direction.y = intersection_point.y - pointLights[i]->position.y;
+            light_direction.z = intersection_point.z - pointLights[i]->position.z;
+
+           //normalize light_direction
+            double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
+            light_direction.x = light_direction.x/light_direction_length;
+            light_direction.y = light_direction.y/light_direction_length;
+            light_direction.z = light_direction.z/light_direction_length;
+            Ray ray1(pointLights[i]->position,light_direction);
+
+            //check if the object is in shadow
+            double tmin = INF,t3;
+            for(int j=0;j<objects.size();j++)
+            {
+                double *color1 = new double[3];
+                color1[0] = 0;
+                color1[1] = 0;
+                color1[2] = 0;
+                t3 = objects[j]->intersect(ray1,color1,0);
+                if(t3<tmin&&t3>0)
+                {
+                    tmin = t3;
+                }
+            }
+            struct point Tmin_point;
+            Tmin_point.x = ray1.origin.x + tmin*ray1.direction.x;
+            Tmin_point.y = ray1.origin.y + tmin*ray1.direction.y;
+            Tmin_point.z = ray1.origin.z + tmin*ray1.direction.z;
+            //distance betn tmin_point and light
+            double Tmin_dist = sqrt(pow(Tmin_point.x-pointLights[i]->position.x,2)+pow(Tmin_point.y-pointLights[i]->position.y,2)+pow(Tmin_point.z-pointLights[i]->position.z,2));
+            //distance betn intersection_point and light
+            double intersection_dist = sqrt(pow(intersection_point.x-pointLights[i]->position.x,2)+pow(intersection_point.y-pointLights[i]->position.y,2)+pow(intersection_point.z-pointLights[i]->position.z,2));
+            if(intersection_dist-0.0000001>Tmin_dist)
+            {
+                continue;
+            }
+            //calculate lambertValue using normal, rayl
+            double lambertValue = 0;
+            lambertValue=-(normal.x*light_direction.x+normal.y*light_direction.y+normal.z*light_direction.z);
+            //calculate reflected ray
+            struct point reflected_ray_direction;
+            //2*(L.N)*N-L
+
+            reflected_ray_direction.x = 2*normal.x*lambertValue+light_direction.x;
+            reflected_ray_direction.y = 2*(normal.y*lambertValue)+light_direction.y;
+            reflected_ray_direction.z = 2*(normal.z*lambertValue)+light_direction.z;
+            Ray reflected_ray(intersection_point,reflected_ray_direction);
+
+            //calculate phongValue using normal, rayl, rayr
+            double phongValue = 0;
+            phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
+            //calculate the color
+            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+
+
+        }
+        for(int i=0;i<spotLights.size();i++)
+        {
+
+
+            struct point light_direction;
+            light_direction.x = intersection_point.x - spotLights[i]->position.x;
+            light_direction.y = intersection_point.y - spotLights[i]->position.y;
+            light_direction.z = intersection_point.z - spotLights[i]->position.z;
+            //if spotlight angle > cutoff angle, ignore the light
+            if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)>spotLights[i]->angle*pi/(180.0))
+            {
+                continue;
+            }
+           //normalize light_direction
+            double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
+            light_direction.x = light_direction.x/light_direction_length;
+            light_direction.y = light_direction.y/light_direction_length;
+            light_direction.z = light_direction.z/light_direction_length;
+            Ray ray1(pointLights[i]->position,light_direction);
+
+            //check if the object is in shadow
+            double tmin = INF,t3;
+            for(int j=0;j<objects.size();j++)
+            {
+                double *color1 = new double[3];
+                color1[0] = 0;
+                color1[1] = 0;
+                color1[2] = 0;
+                t3 = objects[j]->intersect(ray1,color1,0);
+                if(t3<tmin&&t3>0)
+                {
+                    tmin = t3;
+                }
+            }
+            struct point Tmin_point;
+            Tmin_point.x = ray1.origin.x + tmin*ray1.direction.x;
+            Tmin_point.y = ray1.origin.y + tmin*ray1.direction.y;
+            Tmin_point.z = ray1.origin.z + tmin*ray1.direction.z;
+            //distance betn tmin_point and light
+            double Tmin_dist = sqrt(pow(Tmin_point.x-spotLights[i]->position.x,2)+pow(Tmin_point.y-spotLights[i]->position.y,2)+pow(Tmin_point.z-spotLights[i]->position.z,2));
+            //distance betn intersection_point and light
+            double intersection_dist = sqrt(pow(intersection_point.x-spotLights[i]->position.x,2)+pow(intersection_point.y-spotLights[i]->position.y,2)+pow(intersection_point.z-spotLights[i]->position.z,2));
+            if(intersection_dist-0.0000001>Tmin_dist)
+            {
+                continue;
+            }
+            //calculate lambertValue using normal, rayl
+            double lambertValue = 0;
+            lambertValue=-(normal.x*light_direction.x+normal.y*light_direction.y+normal.z*light_direction.z);
+            //calculate reflected ray
+            struct point reflected_ray_direction;
+            //2*(L.N)*N-L
+
+            reflected_ray_direction.x = 2*normal.x*lambertValue+light_direction.x;
+            reflected_ray_direction.y = 2*(normal.y*lambertValue)+light_direction.y;
+            reflected_ray_direction.z = 2*(normal.z*lambertValue)+light_direction.z;
+            Ray reflected_ray(intersection_point,reflected_ray_direction);
+
+            //calculate phongValue using normal, rayl, rayr
+            double phongValue = 0;
+            phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
+            //calculate the color
+            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+
+
+        }
         return t_min;
     }
 };
-// point light class
-class PointLight
-{
-public:
-    struct point position;
-    double *color;
-    PointLight(struct point p, double *color)
-    {
-        this->color=color;
-        this->position = p;
-    }
-    void draw()
-    {
-        //draw a point
-        glPushMatrix();
-        glTranslated(position.x,position.y,position.z);
-        drawSphere(1,10,10,color);
-        glPopMatrix();
 
-    }
-      double intersect(Ray r, double *color,int l)
-    {
-       
-        return 0.0;
-    }
-};
-//spot light class
-class SpotLight
-{
-public:
-    struct point position;
-    double *color;
-    struct point direction;
-    double angle;
-    SpotLight(struct point p, double *color, struct point dir, double angle)
-    {
-
-        this->color=color;
-        this->position = p;
-        this->angle = angle;
-        this->direction = dir;
-    }
-    void draw()
-    {
-          //draw a point
-        glPushMatrix();
-        glTranslated(position.x,position.y,position.z);
-        drawSphere(1,10,10,color);
-        glPopMatrix();
-
-
-    }
-     double intersect(Ray r, double *color,int l)
-    {
-         return 0.0;
-    }
-};
 //floor class inherits from Object class like chess board black and white squares
 class Floor : public Object
 {
@@ -419,6 +919,13 @@ public:
         // this->setCoEfficients(coEfficients);
         // this->setShine(shine);
         this->tile_size = tile_width;
+        this->coEfficients=new double[3];
+        this->coEfficients[0] = 0.5;
+        this->coEfficients[1] = 0.5;
+        this->coEfficients[2] = 0.5;
+        this->coEfficients[3] = 0.5;
+
+        this->shine = 4.0;
     }
     void draw()
     {
@@ -450,41 +957,194 @@ public:
         }
 
     }
-     double intersect(Ray r, double *color,int l)
+    double intersect(Ray r, double *color,int l)
     {
-       double t_min=INF;
-       struct point normal;
+        double t_min=INF;
+        struct point normal;
         normal.x=0;
         normal.y=0;
-        normal.z=-1;
-        if(r.direction.x*normal.x+r.direction.y*normal.y+r.direction.z*normal.z!=0)
-        
-        t_min=-(normal.x*r.origin.x+normal.y*r.origin.y+normal.z*r.origin.z)/(normal.x*r.direction.x+normal.y*r.direction.y+normal.z*r.direction.z);
+        normal.z=1;
+
+        //if ray origin and normal dot product negative, reverse normal direction
+        if(r.origin.x*normal.x+r.origin.y*normal.y+r.origin.z*normal.z<0)
+        {
+            normal.x=-normal.x;
+            normal.y=-normal.y;
+            normal.z=-normal.z;
+        }
+        if(r.direction.x*normal.x+r.direction.y*normal.y+r.direction.z*normal.z!=0.0)
+            t_min=(-1.0)*(normal.x*r.origin.x+normal.y*r.origin.y+normal.z*r.origin.z)/(normal.x*r.direction.x+normal.y*r.direction.y+normal.z*r.direction.z);
         struct point intersect;
         intersect.x=r.origin.x+t_min*r.direction.x;
         intersect.y=r.origin.y+t_min*r.direction.y;
         intersect.z=r.origin.z+t_min*r.direction.z;
-        if(intersect.x<-this->width||intersect.x>this->width&&intersect.y<-this->length&&intersect.y>this->length)
+        if(intersect.x<-this->width||intersect.x>this->width||intersect.y<-this->length||intersect.y>this->length)
+
         {
-           t_min=INF;
+            t_min=INF;
         }
-       
+
+
         if(l==0)
-        return t_min;
+            return t_min;
         if(t_min!=INF&&t_min>0)
         {
-          double i,j;
-        i=intersect.x+this->width;
-        i=floor(i/this->tile_size);
-        j=intersect.y+this->length;
-        j=floor(j/this->tile_size);
-       color[0] = (int)(i+j)%2;
-        color[1] = (int)(i+j)%2;
-        color[2] = (int)(i+j)%2;
+            double i,j;
+            i=intersect.x+this->width;
+            i=floor(i/this->tile_size);
+            j=intersect.y+this->length;
+            j=floor(j/this->tile_size);
+            color[0] = (int)(i+j)%2*0.3;
+            color[1] = (int)(i+j)%2*0.3;
+            color[2] = (int)(i+j)%2*0.3;
+            struct point intersection_point;
+            intersection_point.x=intersect.x;
+            intersection_point.y=intersect.y;
+            intersection_point.z=intersect.z;
+
+        for(int i=0;i<pointLights.size();i++)
+        {
+
+
+
+            struct point light_direction;
+            light_direction.x = intersection_point.x - pointLights[i]->position.x;
+            light_direction.y = intersection_point.y - pointLights[i]->position.y;
+            light_direction.z = intersection_point.z - pointLights[i]->position.z;
+
+           //normalize light_direction
+            double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
+            light_direction.x = light_direction.x/light_direction_length;
+            light_direction.y = light_direction.y/light_direction_length;
+            light_direction.z = light_direction.z/light_direction_length;
+            Ray ray1(pointLights[i]->position,light_direction);
+
+            //check if the object is in shadow
+            double tmin = INF,t3;
+            for(int j=0;j<objects.size();j++)
+            {
+                //cout<<"object"<<endl;
+                double *color1 = new double[3];
+                color1[0] = 0;
+                color1[1] = 0;
+                color1[2] = 0;
+                t3 = objects[j]->intersect(ray1,color1,0);
+                if(t3<tmin&&t3>0)
+                {
+                    tmin = t3;
+                }
+            }
+            struct point Tmin_point;
+            Tmin_point.x = ray1.origin.x + tmin*ray1.direction.x;
+            Tmin_point.y = ray1.origin.y + tmin*ray1.direction.y;
+            Tmin_point.z = ray1.origin.z + tmin*ray1.direction.z;
+            //distance betn tmin_point and light
+            double Tmin_dist = sqrt(pow(Tmin_point.x-pointLights[i]->position.x,2)+pow(Tmin_point.y-pointLights[i]->position.y,2)+pow(Tmin_point.z-pointLights[i]->position.z,2));
+            //distance betn intersection_point and light
+            double intersection_dist = sqrt(pow(intersection_point.x-pointLights[i]->position.x,2)+pow(intersection_point.y-pointLights[i]->position.y,2)+pow(intersection_point.z-pointLights[i]->position.z,2));
+            if(intersection_dist-0.0000001>Tmin_dist)
+            {
+                continue;
+            }
+
+            //calculate lambertValue using normal, rayl
+            double lambertValue = 0;
+            lambertValue=-(normal.x*light_direction.x+normal.y*light_direction.y+normal.z*light_direction.z);
+            //calculate reflected ray
+            struct point reflected_ray_direction;
+            //2*(L.N)*N-L
+
+            reflected_ray_direction.x = 2*normal.x*lambertValue+light_direction.x;
+            reflected_ray_direction.y = 2*(normal.y*lambertValue)+light_direction.y;
+            reflected_ray_direction.z = 2*(normal.z*lambertValue)+light_direction.z;
+            Ray reflected_ray(intersection_point,reflected_ray_direction);
+
+            //calculate phongValue using normal, rayl, rayr
+            double phongValue = 0;
+            phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
+
+            //calculate the color
+            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+
+
         }
-        
-         return t_min;
-        
+        for(int i=0;i<spotLights.size();i++)
+        {
+
+
+            struct point light_direction;
+            light_direction.x = intersection_point.x - spotLights[i]->position.x;
+            light_direction.y = intersection_point.y - spotLights[i]->position.y;
+            light_direction.z = intersection_point.z - spotLights[i]->position.z;
+            //if spotlight angle > cutoff angle, ignore the light
+            if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)>spotLights[i]->angle*pi/(180.0))
+            {
+                continue;
+            }
+
+           //normalize light_direction
+            double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
+            light_direction.x = light_direction.x/light_direction_length;
+            light_direction.y = light_direction.y/light_direction_length;
+            light_direction.z = light_direction.z/light_direction_length;
+            Ray ray1(pointLights[i]->position,light_direction);
+
+            //check if the object is in shadow
+            double tmin = INF,t3;
+            for(int j=0;j<objects.size();j++)
+            {
+                double *color1 = new double[3];
+                color1[0] = 0;
+                color1[1] = 0;
+                color1[2] = 0;
+                t3 = objects[j]->intersect(ray1,color1,0);
+                if(t3<tmin&&t3>0)
+                {
+                    tmin = t3;
+                }
+            }
+            struct point Tmin_point;
+            Tmin_point.x = ray1.origin.x + tmin*ray1.direction.x;
+            Tmin_point.y = ray1.origin.y + tmin*ray1.direction.y;
+            Tmin_point.z = ray1.origin.z + tmin*ray1.direction.z;
+            //distance betn tmin_point and light
+            double Tmin_dist = sqrt(pow(Tmin_point.x-spotLights[i]->position.x,2)+pow(Tmin_point.y-spotLights[i]->position.y,2)+pow(Tmin_point.z-spotLights[i]->position.z,2));
+            //distance betn intersection_point and light
+            double intersection_dist = sqrt(pow(intersection_point.x-spotLights[i]->position.x,2)+pow(intersection_point.y-spotLights[i]->position.y,2)+pow(intersection_point.z-spotLights[i]->position.z,2));
+            if(intersection_dist-0.0000001>Tmin_dist)
+            {
+                continue;
+            }
+            //calculate lambertValue using normal, rayl
+            double lambertValue = 0;
+            lambertValue=-(normal.x*light_direction.x+normal.y*light_direction.y+normal.z*light_direction.z);
+            //calculate reflected ray
+            struct point reflected_ray_direction;
+            //2*(L.N)*N-L
+
+            reflected_ray_direction.x = 2*normal.x*lambertValue+light_direction.x;
+            reflected_ray_direction.y = 2*(normal.y*lambertValue)+light_direction.y;
+            reflected_ray_direction.z = 2*(normal.z*lambertValue)+light_direction.z;
+            Ray reflected_ray(intersection_point,reflected_ray_direction);
+
+            //calculate phongValue using normal, rayl, rayr
+            double phongValue = 0;
+            phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
+            //calculate the color
+            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+
+
+        }
+
+
+        }
+
+        return t_min;
+
     }
 
 
