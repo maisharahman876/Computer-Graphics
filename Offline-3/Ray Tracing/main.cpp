@@ -52,7 +52,7 @@ void capture()
     topleft[0] = topleft[0] + r[0]*(0.5*du) - u[0]*(0.5*dv);
     topleft[1] = topleft[1] + r[1]*(0.5*du) - u[1]*(0.5*dv);
     topleft[2] = topleft[2] + r[2]*(0.5*du) - u[2]*(0.5*dv);
-    cout<<"topleft "<<topleft[0]<<" "<<topleft[1]<<" "<<topleft[2]<<endl;
+    //cout<<"topleft "<<topleft[0]<<" "<<topleft[1]<<" "<<topleft[2]<<endl;
     int nearest;
     double t, tMin;
 // for i=1:imageWidth
@@ -407,7 +407,7 @@ void loadData()
     //cout<<levels<<" "<<pixels<<" "<<objects<<endl;
     for(int i=0; i<objects; i++)
     {
-        cout<<i<<endl;
+        //cout<<i<<endl;
         string s;
         cin>>s;
         if(s=="sphere")
@@ -415,8 +415,8 @@ void loadData()
             struct  point center;
             int shininess;
             double radius;
-            double *color=new double[3];
-            double *coeffs=new double[4];
+            double color[3];
+            double coeffs[4];
             cin>>center.x>>center.y>>center.z;
             cin>>radius;
             cin>>color[0]>>color[1]>>color[2];
@@ -434,8 +434,8 @@ void loadData()
         else if(s=="triangle")
         {
              struct point p1,p2,p3;
-            double *color=new double[3];
-            double *coeffs=new double[4];
+            double color[3];
+            double coeffs[4];
             int shininess;
             cin>>p1.x>>p1.y>>p1.z;
             cin>>p2.x>>p2.y>>p2.z;
@@ -455,10 +455,10 @@ void loadData()
         else if(s=="general")
         {
            // cout<<"baal"<<endl;
-            double *coeffs=new double[4];
-            double *color=new double[3];
+            double coeffs[4];
+            double color[3];
             int shininess;
-            double *params=new double[10];
+            double params[10];
             double length,width,height;
             struct point cube_ref;
             cin>>params[0]>>params[1]>>params[2]>>params[3]>>params[4]>>params[5]>>params[6]>>params[7]>>params[8]>>params[9];
@@ -479,9 +479,9 @@ void loadData()
     cin>>point_lights;
     for(int i=0; i<point_lights; i++)
     {
-        cout<<i<<endl;
+       // cout<<i<<endl;
         struct point p;
-        double *color=new double[3];
+        double color[3];
         cin>>p.x>>p.y>>p.z;
         cin>>color[0]>>color[1]>>color[2];
         PointLight *pl=new PointLight(p,color);
@@ -495,9 +495,9 @@ void loadData()
     cin>>spot_lights;
     for(int i=0; i<spot_lights; i++)
     {
-         cout<<i<<endl;
+        // cout<<i<<endl;
         struct point p;
-        double *color=new double[3];
+        double color[3];
         struct point dir;
         double angle;
         cin>>p.x>>p.y>>p.z;
@@ -574,9 +574,9 @@ int main(int argc, char **argv)
     glutKeyboardFunc(keyboardListener);
     glutSpecialFunc(specialKeyListener);
     glutMouseFunc(mouseListener);
-    cout<<"shuru"<<endl;
+    //cout<<"shuru"<<endl;
     loadData();
-    cout<<"sesh"<<endl;
+    //cout<<"sesh"<<endl;
     glutMainLoop();		//The main loop of OpenGL
 
     return 0;

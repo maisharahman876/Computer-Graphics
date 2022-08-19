@@ -72,7 +72,10 @@ public:
     double *color;
     PointLight(struct point p, double *color)
     {
-        this->color=color;
+        this->color=new double[3];
+        this->color[0]=color[0];
+        this->color[1]=color[1];
+        this->color[2]=color[2];
         this->position = p;
     }
     void draw()
@@ -84,10 +87,9 @@ public:
         glPopMatrix();
 
     }
-    double intersect(Ray r, double *color,int l)
+    ~PointLight()
     {
-
-        return 0.0;
+        delete[] color;
     }
 };
 //spot light class
@@ -101,7 +103,10 @@ public:
     SpotLight(struct point p, double *color, struct point dir, double angle)
     {
 
-        this->color=color;
+        this->color=new double[3];
+        this->color[0]=color[0];
+        this->color[1]=color[1];
+        this->color[2]=color[2];
         this->position = p;
         this->angle = angle;
         this->direction = dir;
@@ -116,9 +121,9 @@ public:
 
 
     }
-    double intersect(Ray r, double *color,int l)
+    ~SpotLight()
     {
-        return 0.0;
+        delete [] color;
     }
 };
 class Object
@@ -141,12 +146,19 @@ public:
     }
     void setColor(double *color)
     {
-        this->color = color;
+        this->color = new double[3];
+        this->color[0] = color[0];
+        this->color[1] = color[1];
+        this->color[2] = color[2];
         //cout<<color[0]<<" "<<color[1]<<" "<<color[2]<<endl;
     }
     void setCoEfficients(double *coEfficients)
     {
-        this->coEfficients = coEfficients;
+        this->coEfficients = new double[4];
+        this->coEfficients[0] = coEfficients[0];
+        this->coEfficients[1] = coEfficients[1];
+        this->coEfficients[2] = coEfficients[2];
+        this->coEfficients[3] = coEfficients[3];
     }
     void setShine(int shine)
     {
@@ -161,6 +173,23 @@ public:
         this->recursion_level = recursion_level;
     
     }
+    ~Object()
+    {
+        for(int i=0; i<objects.size(); i++)
+        {
+            delete objects[i];
+        }
+        for(int i=0; i<pointLights.size(); i++)
+        {
+            delete pointLights[i];
+        }
+        for(int i=0; i<spotLights.size(); i++)
+        {
+            delete spotLights[i];
+        }
+        delete [] color;
+        delete [] coEfficients;
+    }
 };
 //class Sphere inherits from Object
 class Sphere : public Object
@@ -172,6 +201,7 @@ public:
         this->reference_point = center;
         this->length = radius;
         this->setColor(color);
+        //cout<<"color "<<color[0]<<" "<<color[1]<<" "<<color[2]<<endl;
         this->setCoEfficients(coEfficients);
         this->setShine(shine);
     }
@@ -719,8 +749,16 @@ public:
         this->setColor(color);
         this->setCoEfficients(coEfficients);
         this->setShine(shine);
-        this->parameters = params;
+        this->parameters = new double[10];
+        for(int i=0; i<10; i++)
+        {
+            this->parameters[i] = params[i];
+        }
 
+    }
+    ~Quadratic()
+    {
+        delete[] parameters;
     }
     void draw()
     {
@@ -1056,7 +1094,7 @@ public:
         // this->setCoEfficients(coEfficients);
         // this->setShine(shine);
         this->tile_size = tile_width;
-        this->coEfficients=new double[3];
+        this->coEfficients=new double[4];
         this->coEfficients[0] = 0.5;
         this->coEfficients[1] = 0.5;
         this->coEfficients[2] = 0.5;
