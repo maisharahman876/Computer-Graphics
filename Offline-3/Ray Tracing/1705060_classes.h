@@ -110,6 +110,12 @@ public:
         this->position = p;
         this->angle = angle;
         this->direction = dir;
+        //normalize direction
+        double magnitude = sqrt(direction.x*direction.x + direction.y*direction.y + direction.z*direction.z);
+        direction.x /= magnitude;
+        direction.y /= magnitude;
+        direction.z /= magnitude;
+       
     }
     void draw()
     {
@@ -350,17 +356,18 @@ public:
             light_direction.x = intersection_point.x - spotLights[i]->position.x;
             light_direction.y = intersection_point.y - spotLights[i]->position.y;
             light_direction.z = intersection_point.z - spotLights[i]->position.z;
-            //if spotlight angle > cutoff angle, ignore the light
-            if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)>spotLights[i]->angle*pi/(180.0))
-            {
-                continue;
-            }
+           
 
            //normalize light_direction
             double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
             light_direction.x = light_direction.x/light_direction_length;
             light_direction.y = light_direction.y/light_direction_length;
             light_direction.z = light_direction.z/light_direction_length;
+             //if spotlight angle > cutoff angle, ignore the light
+            if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)>spotLights[i]->angle*pi/(180.0))
+            {
+                continue;
+            }
             Ray ray1(pointLights[i]->position,light_direction);
 
             //check if the object is in shadow
@@ -624,17 +631,18 @@ public:
             light_direction.x = intersection_point.x - spotLights[i]->position.x;
             light_direction.y = intersection_point.y - spotLights[i]->position.y;
             light_direction.z = intersection_point.z - spotLights[i]->position.z;
-            //if spotlight angle > cutoff angle, ignore the light
-             if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)>spotLights[i]->angle*pi/(180.0))
-            {
-                continue;
-            }
+            
 
            //normalize light_direction
             double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
             light_direction.x = light_direction.x/light_direction_length;
             light_direction.y = light_direction.y/light_direction_length;
             light_direction.z = light_direction.z/light_direction_length;
+            //if spotlight angle > cutoff angle, ignore the light
+             if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)>spotLights[i]->angle*pi/(180.0))
+            {
+                continue;
+            }
             Ray ray1(pointLights[i]->position,light_direction);
 
             //check if the object is in shadow
@@ -974,16 +982,18 @@ public:
             light_direction.x = intersection_point.x - spotLights[i]->position.x;
             light_direction.y = intersection_point.y - spotLights[i]->position.y;
             light_direction.z = intersection_point.z - spotLights[i]->position.z;
-            //if spotlight angle > cutoff angle, ignore the light
-            if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)>spotLights[i]->angle*pi/(180.0))
-            {
-                continue;
-            }
+            
            //normalize light_direction
             double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
             light_direction.x = light_direction.x/light_direction_length;
             light_direction.y = light_direction.y/light_direction_length;
             light_direction.z = light_direction.z/light_direction_length;
+
+            //if spotlight angle > cutoff angle, ignore the light
+            if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)>spotLights[i]->angle*pi/(180.0))
+            {
+                continue;
+            }
             Ray ray1(pointLights[i]->position,light_direction);
 
             //check if the object is in shadow
@@ -1253,17 +1263,22 @@ public:
             light_direction.x = intersection_point.x - spotLights[i]->position.x;
             light_direction.y = intersection_point.y - spotLights[i]->position.y;
             light_direction.z = intersection_point.z - spotLights[i]->position.z;
-            //if spotlight angle > cutoff angle, ignore the light
-            if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)>spotLights[i]->angle*pi/(180.0))
-            {
-                continue;
-            }
+
+           
+           
 
            //normalize light_direction
             double light_direction_length = sqrt(pow(light_direction.x,2)+pow(light_direction.y,2)+pow(light_direction.z,2));
             light_direction.x = light_direction.x/light_direction_length;
             light_direction.y = light_direction.y/light_direction_length;
+
             light_direction.z = light_direction.z/light_direction_length;
+
+            //if spotlight angle > cutoff angle, ignore the light
+            if(acos(spotLights[i]->direction.x*light_direction.x+spotLights[i]->direction.y*light_direction.y+spotLights[i]->direction.z*light_direction.z)*180/pi > spotLights[i]->angle)
+            {
+                continue;
+            }
             Ray ray1(pointLights[i]->position,light_direction);
 
             //check if the object is in shadow
