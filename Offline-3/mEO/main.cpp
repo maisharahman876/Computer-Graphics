@@ -36,7 +36,7 @@ void capture()
     bitmap_image image(pixels,pixels);
     //find the view angle from u r l
     double planeDistance = ((double)windowHeight/2.0) /tan(fovY/2.0*pi/180.0);
-   // cout<<"planeDistance "<<planeDistance<<endl;
+    // cout<<"planeDistance "<<planeDistance<<endl;
     double *topleft=new double[3];
 
     //topleft = eye + l*planeDistance - r*windowWidth/2 + u*windowHeight/2
@@ -433,7 +433,7 @@ void loadData()
 
         else if(s=="triangle")
         {
-             struct point p1,p2,p3;
+            struct point p1,p2,p3;
             double *color=new double[3];
             double *coeffs=new double[4];
             int shininess;
@@ -454,7 +454,7 @@ void loadData()
         }
         else if(s=="general")
         {
-           // cout<<"baal"<<endl;
+            // cout<<"baal"<<endl;
             double *coeffs=new double[4];
             double *color=new double[3];
             int shininess;
@@ -495,7 +495,7 @@ void loadData()
     cin>>spot_lights;
     for(int i=0; i<spot_lights; i++)
     {
-         cout<<i<<endl;
+        cout<<i<<endl;
         struct point p;
         double *color=new double[3];
         struct point dir;
@@ -512,9 +512,9 @@ void loadData()
         }
         spot_lights_list.push_back(sl);
     }
-    for(int i=0;i<=objects;i++)
+    for(int i=0; i<=objects; i++)
     {
-       objects_list[i]->setObjectsAndLights(objects_list,point_lights_list,spot_lights_list,levels);
+        objects_list[i]->setObjectsAndLights(objects_list,point_lights_list,spot_lights_list,levels);
     }
     //fin.close();
 
@@ -531,7 +531,7 @@ void init()
     u[0]=0,u[1]=0,u[2]=1;
     r[0]=1,r[1]=0,r[2]=0;
     l[0]=0,l[1]=1,l[2]=0;
-    
+
     imgCount=0;
     //box_a=50,cyl_r=25;
     //clear the screen
