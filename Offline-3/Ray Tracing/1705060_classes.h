@@ -244,13 +244,13 @@ public:
         {
             t1 = (-b + sqrt(d))/(2*a);
             t2 = (-b - sqrt(d))/(2*a);
-            if(t1<t2)
+            if(t2>0)
             {
-                t_min = t1;
+                t_min = t2;
             }
             else
             {
-                t_min = t2;
+                t_min = t1;
             }
         }
 
@@ -342,9 +342,9 @@ public:
             double phongValue = 0;
             phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
             //calculate the color
-            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
-            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
-            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue,0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue,0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue,0.0), this->shine)*color[2];
 
 
         }
@@ -412,9 +412,9 @@ public:
             double phongValue = 0;
             phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
             //calculate the color
-            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
-            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
-            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue,0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue,0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue,0.0), this->shine)*color[2];
 
 
         }
@@ -617,9 +617,9 @@ public:
             double phongValue = 0;
             phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
             //calculate the color
-            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
-            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
-            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue,0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue,0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue,0.0), this->shine)*color[2];
 
 
         }
@@ -687,9 +687,9 @@ public:
             double phongValue = 0;
             phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
             //calculate the color
-            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
-            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
-            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue,0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue,0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue,0.0), this->shine)*color[2];
 
 
         }
@@ -968,9 +968,9 @@ public:
             double phongValue = 0;
             phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
             //calculate the color
-            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
-            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
-            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue,0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue,0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue,0.0), this->shine)*color[2];
 
 
         }
@@ -1038,9 +1038,9 @@ public:
             double phongValue = 0;
             phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
             //calculate the color
-            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
-            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
-            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue,0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue,0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue,0.0), this->shine)*color[2];
 
 
         }
@@ -1249,9 +1249,9 @@ public:
             phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
 
             //calculate the color
-            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
-            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
-            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+            color[0] = color[0] + this->coEfficients[1]*pointLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*pointLights[i]->color[0]*pow(max(phongValue,0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*pointLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*pointLights[i]->color[1]*pow(max(phongValue,0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*pointLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*pointLights[i]->color[2]*pow(max(phongValue,0.0), this->shine)*color[2];
 
 
         }
@@ -1323,9 +1323,9 @@ public:
             double phongValue = 0;
             phongValue=-(r.direction.x*reflected_ray_direction.x+r.direction.y*reflected_ray_direction.y+r.direction.z*reflected_ray_direction.z);
             //calculate the color
-            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue, 0.0), this->shine)*color[0];
-            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue, 0.0), this->shine)*color[1];
-            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue, 0.0), this->shine)*color[2];
+            color[0] = color[0] + this->coEfficients[1]*spotLights[i]->color[0]*max(lambertValue,0.0)*color[0] + this->coEfficients[2]*spotLights[i]->color[0]*pow(max(phongValue,0.0), this->shine)*color[0];
+            color[1] = color[1] + this->coEfficients[1]*spotLights[i]->color[1]*max(lambertValue,0.0)*color[1] + this->coEfficients[2]*spotLights[i]->color[1]*pow(max(phongValue,0.0), this->shine)*color[1];
+            color[2] = color[2] + this->coEfficients[1]*spotLights[i]->color[2]*max(lambertValue,0.0)*color[2] + this->coEfficients[2]*spotLights[i]->color[2]*pow(max(phongValue,0.0), this->shine)*color[2];
 
 
         }
